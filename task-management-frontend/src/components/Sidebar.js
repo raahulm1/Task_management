@@ -7,7 +7,10 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/login");
+    // Clear browser history and prevent back navigation
+    window.history.pushState(null, null, '/login');
+    window.history.replaceState(null, null, '/login');
+    navigate("/login", { replace: true });
   };
 
   return (
