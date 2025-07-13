@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchTasks, createTask, updateTaskStatus } from "../features/tasks/tasksSlice";
 import Sidebar from "../components/Sidebar";
 import KanbanBoard from "../components/KanbanBoard";
+import { getProjectById } from "../api/projects";
 
 function ProjectPage() {
   const { id } = useParams();
@@ -13,10 +14,27 @@ function ProjectPage() {
 
   const { list: tasks, loading, error } = useSelector((state) => state.tasks);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
+  const [projectName, setProjectName] = useState("");
+
+  const fetchProjectName = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const project = await getProjectById(id, token);
+      setProjectName(project.name);
+    } catch (err) {
+      setProjectName("");
+    }
+  };
 
   useEffect(() => {
     dispatch(fetchTasks(id));
   }, [dispatch, id]);
+
+  useEffect(() => {
+    fetchTasks();
+    fetchProjectName();
+    // eslint-disable-next-line
+  }, [id]);
 
   const handleAddTask = async (task) => {
     await dispatch(createTask({ task, projectId: id }));
@@ -32,7 +50,7 @@ function ProjectPage() {
 
       <div className="flex-grow-1 p-4">
         <div className="p-4 rounded shadow-sm" style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}>
-          <h2 className="mb-4 text-center">Project {id} - Kanban Board</h2>
+          <h2 className="mb-4 text-center">{projectName} - Kanban Board</h2>
 
           <div className="text-center mb-3 position-relative d-flex justify-content-center">
             <button className="btn btn-primary d-flex align-items-center" onClick={() => navigate(`/project/${id}/add-task`)}>

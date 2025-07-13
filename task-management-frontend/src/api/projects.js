@@ -15,3 +15,10 @@ export const createProject = async (name, token) => {
   });
   return res.data;
 };
+
+export const getProjectById = async (id, token) => {
+  const res = await axios.get(`${API_URL}/${id}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return res.data;
+};

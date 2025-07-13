@@ -22,6 +22,12 @@ public class ProjectController {
         return projectService.getProjectsForUser(userId);
     }
 
+    @GetMapping("/{id}")
+    public Project getProjectById(@PathVariable String id, @RequestHeader("Authorization") String authHeader) {
+        // Optionally, you can check if the user is authorized to access this project
+        return projectService.getProjectById(id);
+    }
+
     @PostMapping
     public Project createProject(@RequestBody Project project, @RequestHeader("Authorization") String authHeader) {
         String userId = jwtUtil.getUserIdFromJwt(authHeader.replace("Bearer ", ""));

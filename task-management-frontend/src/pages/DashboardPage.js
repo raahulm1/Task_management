@@ -22,7 +22,7 @@ function DashboardPage() {
       <div className="flex-grow-1 p-4 text-white">
         <h4 className="mb-4">DashBoard</h4>
         <div className="d-flex justify-content-center align-items-center mb-4">
-          <h4>Hi, CMartSolutions </h4>
+          <h4>Hi,User</h4>
         </div>
 
         <div className="p-4 rounded shadow-sm" style={{ backgroundColor: "#2a2a2a", maxWidth: "700px", margin: "0 auto" }}>

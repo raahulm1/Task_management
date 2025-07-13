@@ -21,12 +21,31 @@ public class TaskService {
 
     public Task updateTask(String id, Task task) {
         Task existing = taskRepository.findById(id).orElseThrow();
-        existing.setTitle(task.getTitle());
-        existing.setDescription(task.getDescription());
-        existing.setPriority(task.getPriority());
-        existing.setAssignee(task.getAssignee());
-        existing.setDueDate(task.getDueDate());
-        existing.setStatus(task.getStatus());
+        
+        // Only update fields that are not null to preserve existing data
+        if (task.getTitle() != null) {
+            existing.setTitle(task.getTitle());
+        }
+        if (task.getDescription() != null) {
+            existing.setDescription(task.getDescription());
+        }
+        if (task.getPriority() != null) {
+            existing.setPriority(task.getPriority());
+        }
+        if (task.getAssignee() != null) {
+            existing.setAssignee(task.getAssignee());
+        }
+        if (task.getDueDate() != null) {
+            existing.setDueDate(task.getDueDate());
+        }
+        if (task.getStatus() != null) {
+            existing.setStatus(task.getStatus());
+        }
+        
         return taskRepository.save(existing);
+    }
+
+    public void deleteTask(String id) {
+        taskRepository.deleteById(id);
     }
 }

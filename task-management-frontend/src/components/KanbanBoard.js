@@ -23,7 +23,8 @@ function KanbanBoard({ tasks }) {
   const handleDrop = (e, newStatus) => {
     e.preventDefault();
     const taskId = e.dataTransfer.getData("taskId");
-    dispatch(updateTaskStatus({ taskId, newStatus }));
+    const projectId = tasks[0]?.projectId;
+    dispatch(updateTaskStatus({ taskId, newStatus, projectId }));
 
     setMessageTaskId(taskId);
     setMessageText(`Moved to ${newStatus}`);

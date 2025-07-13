@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getTasks, addTask, deleteTask as apiDeleteTask } from '../../api/tasks';
+import { getTasks, addTask, deleteTask as apiDeleteTask, updateTask } from '../../api/tasks';
+import { deleteTask as deleteTaskApi } from '../../api/tasks';
 
 // ✅ FETCH TASKS
 export const fetchTasks = createAsyncThunk(
@@ -26,8 +27,18 @@ export const deleteTask = createAsyncThunk(
   'tasks/deleteTask',
   async ({ taskId, projectId }, thunkAPI) => {
     const token = localStorage.getItem("token");
-    await apiDeleteTask(taskId, token);
+    await deleteTaskApi(taskId, token);
     return thunkAPI.dispatch(fetchTasks(projectId)); // reload after delete
+  }
+);
+
+// ✅ UPDATE TASK STATUS
+export const updateTaskStatus = createAsyncThunk(
+  'tasks/updateTaskStatus',
+  async ({ taskId, newStatus, projectId }, thunkAPI) => {
+    const token = localStorage.getItem("token");
+    await updateTask(taskId, { status: newStatus }, token);
+    return thunkAPI.dispatch(fetchTasks(projectId)); // reload after update
   }
 );
 
@@ -41,11 +52,6 @@ const tasksSlice = createSlice({
     editingTask: null, // for editing modal or page
   },
   reducers: {
-    updateTaskStatus: (state, action) => {
-      const { taskId, newStatus } = action.payload;
-      const task = state.list.find(t => t.id === taskId);
-      if (task) task.status = newStatus;
-    },
     startEditingTask: (state, action) => {
       state.editingTask = action.payload;
     },
@@ -71,7 +77,6 @@ const tasksSlice = createSlice({
 });
 
 export const {
-  updateTaskStatus,
   startEditingTask,
   clearEditingTask,
 } = tasksSlice.actions;
