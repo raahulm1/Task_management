@@ -44,6 +44,7 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         {[
           { icon: "bi-house", label: "Home", path: "/dashboard" },
           { icon: "bi-check2-square", label: "My projects", path: "/projects" },
+          { icon: "bi-list-task", label: "My Tasks", path: "/my-tasks" },
           { icon: "bi-inbox", label: "Inbox", path: "/inbox" },
         ].map((item, i) => (
           <li key={i} className="nav-item">

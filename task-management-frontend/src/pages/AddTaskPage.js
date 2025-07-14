@@ -4,11 +4,14 @@ import TaskForm from "../components/TaskForm";
 import Sidebar from "../components/Sidebar";
 import { getProjectById } from "../api/projects";
 import { addTask } from "../api/tasks";
+import { useState } from "react";
 
 function AddTaskPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [projectName, setProjectName] = React.useState("");
+  const [collapsed, setCollapsed] = useState(false);
+
 
   React.useEffect(() => {
     const fetchProjectName = async () => {
@@ -36,7 +39,7 @@ function AddTaskPage() {
 
   return (
     <div className="d-flex min-vh-100" style={{ backgroundColor: "#1e1e1e", color: "white" }}>
-      <Sidebar collapsed={false} setCollapsed={() => {}} projects={[]} showProjects={false} loading={false} error={null} />
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={[]} loading={false} error={null} showProjects={false} />
 
       <div className="flex-grow-1 p-4">
         <div className="p-4 rounded shadow-sm" style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}>

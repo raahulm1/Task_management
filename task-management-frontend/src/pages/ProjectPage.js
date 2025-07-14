@@ -5,6 +5,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchTasks, createTask, updateTaskStatus } from "../features/tasks/tasksSlice";
 import Sidebar from "../components/Sidebar";
 import KanbanBoard from "../components/KanbanBoard";
+import ListView from "../components/ListView";
+import Overview from "../components/Overview";
+import ProjectNavigation from "../components/ProjectNavigation";
 import { getProjectById } from "../api/projects";
 
 function ProjectPage() {
@@ -15,6 +18,8 @@ function ProjectPage() {
   const { list: tasks, loading, error } = useSelector((state) => state.tasks);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [projectName, setProjectName] = useState("");
+  const [activeView, setActiveView] = useState("board"); // Default to board view
+  const [collapsed, setCollapsed] = useState(false);
 
   const fetchProjectName = async () => {
     try {
@@ -44,13 +49,38 @@ function ProjectPage() {
     dispatch(updateTaskStatus({ taskId, newStatus }));
   };
 
+  const renderView = () => {
+    if (loading) {
+      return <p className="text-center">Loading tasks...</p>;
+    }
+    
+    if (error) {
+      return <p className="text-danger text-center">{error}</p>;
+    }
+
+    switch (activeView) {
+      case "overview":
+        return <Overview tasks={tasks} projectName={projectName} />;
+      case "list":
+        return <ListView tasks={tasks} onStatusChange={handleStatusChange} />;
+      case "board":
+        return <KanbanBoard tasks={tasks} onStatusChange={handleStatusChange} />;
+      default:
+        return <KanbanBoard tasks={tasks} onStatusChange={handleStatusChange} />;
+    }
+  };
+
   return (
     <div className="d-flex min-vh-100" style={{ backgroundColor: "#1e1e1e", color: "white" }}>
-      <Sidebar collapsed={false} setCollapsed={() => {}} projects={[]} loading={false} error={null} showProjects={false} />
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={[]} loading={false} error={null} showProjects={false} />
 
       <div className="flex-grow-1 p-4">
         <div className="p-4 rounded shadow-sm" style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}>
-          <h2 className="mb-4 text-center">{projectName} - Kanban Board</h2>
+          <ProjectNavigation 
+            activeView={activeView} 
+            onViewChange={setActiveView} 
+            projectName={projectName}
+          />
 
           <div className="text-center mb-3 position-relative d-flex justify-content-center">
             <button className="btn btn-primary d-flex align-items-center" onClick={() => navigate(`/project/${id}/add-task`)}>
@@ -73,13 +103,7 @@ function ProjectPage() {
             )}
           </div>
 
-          {loading ? (
-            <p className="text-center">Loading tasks...</p>
-          ) : error ? (
-            <p className="text-danger text-center">{error}</p>
-          ) : (
-            <KanbanBoard tasks={tasks} onStatusChange={handleStatusChange} />
-          )}
+          {renderView()}
         </div>
       </div>
     </div>
