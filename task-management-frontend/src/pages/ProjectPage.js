@@ -8,6 +8,7 @@ import KanbanBoard from "../components/KanbanBoard";
 import ListView from "../components/ListView";
 import Overview from "../components/Overview";
 import ProjectNavigation from "../components/ProjectNavigation";
+import EditTaskModal from "../components/EditTaskModal";
 import { getProjectById } from "../api/projects";
 
 function ProjectPage() {
@@ -106,6 +107,9 @@ function ProjectPage() {
           {renderView()}
         </div>
       </div>
+      
+      {/* Edit Task Modal */}
+      <EditTaskModal />
     </div>
   );
 }

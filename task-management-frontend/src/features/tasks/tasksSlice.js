@@ -42,6 +42,16 @@ export const updateTaskStatus = createAsyncThunk(
   }
 );
 
+// ✅ UPDATE TASK
+export const updateTaskAsync = createAsyncThunk(
+  'tasks/updateTaskAsync',
+  async ({ taskId, taskData, projectId }, thunkAPI) => {
+    const token = localStorage.getItem("token");
+    await updateTask(taskId, taskData, token);
+    return thunkAPI.dispatch(fetchTasks(projectId)); // reload after update
+  }
+);
+
 // ✅ Slice
 const tasksSlice = createSlice({
   name: 'tasks',
