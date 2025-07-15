@@ -1,8 +1,19 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { useKeycloak } from '@react-keycloak/web';
+import { useNavigate } from "react-router-dom";
 import "../styles/landing.css";
+import keycloak from '../keycloak';
 
 function LandingPage() {
+  const { keycloak: kc, initialized } = useKeycloak();
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (initialized && kc.authenticated) {
+      navigate("/dashboard");
+    }
+  }, [initialized, kc.authenticated, navigate]);
+
   return (
     <div
       className="landing-page"
@@ -35,12 +46,8 @@ function LandingPage() {
       </ul>
 
       <div className="button-group" style={{ display: "flex", gap: "1rem" }}>
-        <Link to="/login">
-          <button className="btn btn-primary px-4">Login</button>
-        </Link>
-        <Link to="/register">
-          <button className="btn btn-outline-primary px-4">Register</button>
-        </Link>
+        <button className="btn btn-primary px-4" onClick={() => keycloak.login()}>Login</button>
+        <button className="btn btn-outline-primary px-4" onClick={() => keycloak.register()}>Register</button>
       </div>
     </div>
   );

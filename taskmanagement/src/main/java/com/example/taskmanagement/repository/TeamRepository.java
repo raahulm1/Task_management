@@ -1,11 +1,11 @@
 package com.example.taskmanagement.repository;
 
-import com.example.taskmanagement.model.Task;
+import com.example.taskmanagement.model.Team;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TaskRepository extends MongoRepository<Task, String> {
-    List<Task> findByProjectId(String projectId);
-}
+public interface TeamRepository extends MongoRepository<Team, String> {
+    List<Team> findByMembersUserId(String userId);
+} 

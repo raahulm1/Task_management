@@ -1,12 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { getTasks, addTask, deleteTask as apiDeleteTask, updateTask } from '../../api/tasks';
-import { deleteTask as deleteTaskApi } from '../../api/tasks';
 
 // ✅ FETCH TASKS
 export const fetchTasks = createAsyncThunk(
   'tasks/fetchTasks',
-  async (projectId, thunkAPI) => {
-    const token = localStorage.getItem("token");
+  async ({ projectId, token }, thunkAPI) => {
     const data = await getTasks(projectId, token);
     return data;
   }
@@ -15,40 +13,36 @@ export const fetchTasks = createAsyncThunk(
 // ✅ CREATE TASK
 export const createTask = createAsyncThunk(
   'tasks/createTask',
-  async ({ task, projectId }, thunkAPI) => {
-    const token = localStorage.getItem("token");
+  async ({ task, projectId, token }, thunkAPI) => {
     await addTask({ ...task, projectId }, token);
-    return thunkAPI.dispatch(fetchTasks(projectId)); // reload after add
+    return thunkAPI.dispatch(fetchTasks({ projectId, token })); // reload after add
   }
 );
 
 // ✅ DELETE TASK
 export const deleteTask = createAsyncThunk(
   'tasks/deleteTask',
-  async ({ taskId, projectId }, thunkAPI) => {
-    const token = localStorage.getItem("token");
-    await deleteTaskApi(taskId, token);
-    return thunkAPI.dispatch(fetchTasks(projectId)); // reload after delete
+  async ({ taskId, projectId, token }, thunkAPI) => {
+    await apiDeleteTask(taskId, token);
+    return thunkAPI.dispatch(fetchTasks({ projectId, token })); // reload after delete
   }
 );
 
 // ✅ UPDATE TASK STATUS
 export const updateTaskStatus = createAsyncThunk(
   'tasks/updateTaskStatus',
-  async ({ taskId, newStatus, projectId }, thunkAPI) => {
-    const token = localStorage.getItem("token");
+  async ({ taskId, newStatus, projectId, token }, thunkAPI) => {
     await updateTask(taskId, { status: newStatus }, token);
-    return thunkAPI.dispatch(fetchTasks(projectId)); // reload after update
+    return thunkAPI.dispatch(fetchTasks({ projectId, token })); // reload after update
   }
 );
 
 // ✅ UPDATE TASK
 export const updateTaskAsync = createAsyncThunk(
   'tasks/updateTaskAsync',
-  async ({ taskId, taskData, projectId }, thunkAPI) => {
-    const token = localStorage.getItem("token");
+  async ({ taskId, taskData, projectId, token }, thunkAPI) => {
     await updateTask(taskId, taskData, token);
-    return thunkAPI.dispatch(fetchTasks(projectId)); // reload after update
+    return thunkAPI.dispatch(fetchTasks({ projectId, token })); // reload after update
   }
 );
 

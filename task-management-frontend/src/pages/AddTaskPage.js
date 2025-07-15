@@ -5,31 +5,30 @@ import Sidebar from "../components/Sidebar";
 import { getProjectById } from "../api/projects";
 import { addTask } from "../api/tasks";
 import { useState } from "react";
+import { useKeycloak } from '@react-keycloak/web';
 
 function AddTaskPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [projectName, setProjectName] = React.useState("");
   const [collapsed, setCollapsed] = useState(false);
-
+  const { keycloak } = useKeycloak();
 
   React.useEffect(() => {
     const fetchProjectName = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const project = await getProjectById(id, token);
+        const project = await getProjectById(id, keycloak.token);
         setProjectName(project.name);
       } catch (err) {
         setProjectName("");
       }
     };
     fetchProjectName();
-  }, [id]);
+  }, [id, keycloak.token]);
 
   const handleAddTask = async (task) => {
     try {
-      const token = localStorage.getItem("token");
-      await addTask({ ...task, projectId: id }, token);
+      await addTask({ ...task, projectId: id }, keycloak.token);
       navigate(`/project/${id}`);
     } catch (error) {
       console.error(error);

@@ -4,6 +4,7 @@
   "proxy": "http://localhost:8080",
   "private": true,
   "dependencies": {
+    "@react-keycloak/web": "^3.4.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -12,6 +13,7 @@
     "axios": "^1.10.0",
     "bootstrap": "^5.3.7",
     "bootstrap-icons": "^1.13.1",
+    "keycloak-js": "^26.2.0",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-datepicker": "^8.4.0",

@@ -1,13 +1,22 @@
 import axios from "axios";
+import keycloak from '../keycloak';
 
 const API_URL = "http://localhost:8080/auth";
 
-export const register = async (name, password) => {
-  const res = await axios.post(`${API_URL}/register`, { name, password });
-  return res.data;
-};
+export async function getMe(token) {
+  const response = await fetch(`${API_URL}/me`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) throw new Error('Failed to fetch user info');
+  return response.json();
+}
 
-export const login = async (name, password) => {
-  const res = await axios.post(`${API_URL}/login`, { name, password });
-  return res.data.token; // returns JWT token
+
+export const getAuthHeader = () => {
+  if (keycloak && keycloak.token) {
+    return { Authorization: `Bearer ${keycloak.token}` };
+  }
+  return {};
 };

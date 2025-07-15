@@ -4,16 +4,20 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProjects } from "../features/projects/projectsSlice";
 import Sidebar from "../components/Sidebar";
+import { useKeycloak } from '@react-keycloak/web';
 
 function DashboardPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { keycloak } = useKeycloak();
   const { list: projects, loading, error } = useSelector((state) => state.projects);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
-    dispatch(fetchProjects());
-  }, [dispatch]);
+    if (keycloak.authenticated) {
+      dispatch(fetchProjects(keycloak.token));
+    }
+  }, [dispatch, keycloak]);
 
   return (
     <div className="d-flex min-vh-100" style={{ background: "#2c2c2c" }}>

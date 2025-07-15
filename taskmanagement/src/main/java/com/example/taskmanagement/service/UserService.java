@@ -2,29 +2,28 @@ package com.example.taskmanagement.service;
 
 import com.example.taskmanagement.model.User;
 import com.example.taskmanagement.repository.UserRepository;
-import com.example.taskmanagement.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
-import java.util.Optional;
 
 @Service
 public class UserService {
     @Autowired
     private UserRepository userRepository;
-    @Autowired
-    private JwtUtil jwtUtil;
 
-    public User register(User user) {
-        user.setPassword(BCrypt.hashpw(user.getPassword(), BCrypt.gensalt()));
-        return userRepository.save(user);
+    public User findOrCreateUser(String keycloakId, String name, String email) {
+        User user = userRepository.findByKeycloakId(keycloakId);
+        if (user == null) {
+            user = new User();
+            user.setId(keycloakId);
+            user.setKeycloakId(keycloakId);
+            user.setName(name);
+            user.setEmail(email);
+            userRepository.save(user);
+        }
+        return user;
     }
 
-    public String login(String name, String password) {
-        Optional<User> userOpt = userRepository.findByName(name);
-        if (userOpt.isPresent() && BCrypt.checkpw(password, userOpt.get().getPassword())) {
-            return jwtUtil.generateToken(userOpt.get().getId());
-        }
-        throw new RuntimeException("Invalid credentials");
+    public User getUserByKeycloakId(String keycloakId) {
+        return userRepository.findByKeycloakId(keycloakId);
     }
 }

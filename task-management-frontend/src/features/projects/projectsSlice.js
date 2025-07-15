@@ -3,8 +3,7 @@ import { getProjects } from '../../api/projects';
 
 export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
-  async () => {
-    const token = localStorage.getItem("token");
+  async (token) => {
     const data = await getProjects(token);
     return data;
   }

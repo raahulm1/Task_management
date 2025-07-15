@@ -1,31 +1,51 @@
 import axios from "axios";
+import { getAuthHeader } from "./auth";
 
 const API_URL = "http://localhost:8080/tasks";
 
-export const getTasks = async (projectId, token) => {
-  const res = await axios.get(`${API_URL}/${projectId}`, {
-    headers: { Authorization: `Bearer ${token}` }
+export async function getTasks(projectId, token) {
+  const response = await fetch(`/tasks/${projectId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
   });
-  return res.data;
-};
+  if (!response.ok) throw new Error('Failed to fetch tasks');
+  return response.json();
+}
 
-export const addTask = async (task, token) => {
-  const res = await axios.post(API_URL, task, {
-    headers: { Authorization: `Bearer ${token}` }
+export async function addTask(task, token) {
+  const response = await fetch('/tasks', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(task)
   });
-  return res.data;
-};
+  if (!response.ok) throw new Error('Failed to add task');
+  return response.json();
+}
 
-export const updateTask = async (id, task, token) => {
-  const res = await axios.put(`${API_URL}/${id}`, task, {
-    headers: { Authorization: `Bearer ${token}` }
+export async function updateTask(id, task, token) {
+  const response = await fetch(`/tasks/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(task)
   });
-  return res.data;
-};
+  if (!response.ok) throw new Error('Failed to update task');
+  return response.json();
+}
 
-export const deleteTask = async (id, token) => {
-  const res = await axios.delete(`${API_URL}/${id}`, {
-    headers: { Authorization: `Bearer ${token}` }
+export async function deleteTask(id, token) {
+  const response = await fetch(`/tasks/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
   });
-  return res.data;
-};
+  if (!response.ok) throw new Error('Failed to delete task');
+  return response.ok;
+}

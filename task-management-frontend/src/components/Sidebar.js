@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import keycloak from '../keycloak';
 
 function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showProjects = true }) {
   const navigate = useNavigate();
@@ -7,10 +8,7 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    // Clear browser history and prevent back navigation
-    window.history.pushState(null, null, '/login');
-    window.history.replaceState(null, null, '/login');
-    navigate("/login", { replace: true });
+    keycloak.logout({ redirectUri: window.location.origin + '/' });
   };
 
   return (

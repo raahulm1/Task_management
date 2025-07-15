@@ -10,11 +10,13 @@ import Overview from "../components/Overview";
 import ProjectNavigation from "../components/ProjectNavigation";
 import EditTaskModal from "../components/EditTaskModal";
 import { getProjectById } from "../api/projects";
+import { useKeycloak } from '@react-keycloak/web';
 
 function ProjectPage() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { keycloak } = useKeycloak();
 
   const { list: tasks, loading, error } = useSelector((state) => state.tasks);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
@@ -24,8 +26,7 @@ function ProjectPage() {
 
   const fetchProjectName = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const project = await getProjectById(id, token);
+      const project = await getProjectById(id, keycloak.token);
       setProjectName(project.name);
     } catch (err) {
       setProjectName("");
@@ -33,21 +34,22 @@ function ProjectPage() {
   };
 
   useEffect(() => {
-    dispatch(fetchTasks(id));
-  }, [dispatch, id]);
+    if (keycloak.authenticated) {
+      dispatch(fetchTasks({ projectId: id, token: keycloak.token }));
+    }
+  }, [dispatch, id, keycloak]);
 
   useEffect(() => {
-    fetchTasks();
     fetchProjectName();
     // eslint-disable-next-line
-  }, [id]);
+  }, [id, keycloak.token]);
 
   const handleAddTask = async (task) => {
-    await dispatch(createTask({ task, projectId: id }));
+    await dispatch(createTask({ task, projectId: id, token: keycloak.token }));
   };
 
   const handleStatusChange = (taskId, newStatus) => {
-    dispatch(updateTaskStatus({ taskId, newStatus }));
+    dispatch(updateTaskStatus({ taskId, newStatus, projectId: id, token: keycloak.token }));
   };
 
   const renderView = () => {
