@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
+import { useKeycloak } from '@react-keycloak/web';
 import {
   updateTaskStatus,
   deleteTask,
@@ -8,6 +9,7 @@ import {
 
 function KanbanBoard({ tasks }) {
   const dispatch = useDispatch();
+  const { keycloak } = useKeycloak();
   const statuses = ["Todo", "In Progress", "Completed"];
   const [messageTaskId, setMessageTaskId] = useState(null);
   const [messageText, setMessageText] = useState("");
@@ -24,7 +26,7 @@ function KanbanBoard({ tasks }) {
     e.preventDefault();
     const taskId = e.dataTransfer.getData("taskId");
     const projectId = tasks[0]?.projectId;
-    dispatch(updateTaskStatus({ taskId, newStatus, projectId }));
+    dispatch(updateTaskStatus({ taskId, newStatus, projectId, token: keycloak.token }));
 
     setMessageTaskId(taskId);
     setMessageText(`Moved to ${newStatus}`);

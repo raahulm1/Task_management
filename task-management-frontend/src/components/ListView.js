@@ -134,7 +134,7 @@ function ListView({
                       <div>
                         <strong>{task.title}</strong>
                         {task.description && (
-                          <div className="text-muted small mt-1">{task.description}</div>
+                          <div>{task.description}</div>
                         )}
                         {/* Subtasks (future: if task.subtasks) */}
                         {task.subtasks && Array.isArray(task.subtasks) && task.subtasks.length > 0 && (

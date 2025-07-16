@@ -4,7 +4,7 @@ import { getAuthHeader } from "./auth";
 const API_URL = "http://localhost:8080/tasks";
 
 export async function getTasks(projectId, token) {
-  const response = await fetch(`/tasks/${projectId}`, {
+  const response = await fetch(`${API_URL}/${projectId}`, {
     headers: {
       'Authorization': `Bearer ${token}`
     }
@@ -14,7 +14,7 @@ export async function getTasks(projectId, token) {
 }
 
 export async function addTask(task, token) {
-  const response = await fetch('/tasks', {
+  const response = await fetch(API_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -27,7 +27,7 @@ export async function addTask(task, token) {
 }
 
 export async function updateTask(id, task, token) {
-  const response = await fetch(`/tasks/${id}`, {
+  const response = await fetch(`${API_URL}/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ export async function updateTask(id, task, token) {
 }
 
 export async function deleteTask(id, token) {
-  const response = await fetch(`/tasks/${id}`, {
+  const response = await fetch(`${API_URL}/${id}`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`
