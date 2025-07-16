@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getTasks, addTask, deleteTask as apiDeleteTask, updateTask } from '../../api/tasks';
+import { getTasks, addTask, deleteTask as apiDeleteTask, updateTask, patchTask } from '../../api/tasks';
 
 // ✅ FETCH TASKS
 export const fetchTasks = createAsyncThunk(
@@ -43,6 +43,15 @@ export const updateTaskAsync = createAsyncThunk(
   async ({ taskId, taskData, projectId, token }, thunkAPI) => {
     await updateTask(taskId, taskData, token);
     return thunkAPI.dispatch(fetchTasks({ projectId, token })); // reload after update
+  }
+);
+
+// ✅ PATCH TASK (Partial Update)
+export const patchTaskAsync = createAsyncThunk(
+  'tasks/patchTaskAsync',
+  async ({ taskId, updates, projectId, token }, thunkAPI) => {
+    await patchTask(taskId, updates, token);
+    return thunkAPI.dispatch(fetchTasks({ projectId, token })); // reload after patch
   }
 );
 

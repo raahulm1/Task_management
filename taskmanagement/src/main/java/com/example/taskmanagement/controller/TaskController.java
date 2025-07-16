@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/tasks")
@@ -31,5 +32,10 @@ public class TaskController {
     @DeleteMapping("/{id}")
     public void deleteTask(@PathVariable String id) {
         taskService.deleteTask(id);
+    }
+
+    @PatchMapping("/{id}")
+    public Task patchTask(@PathVariable String id, @RequestBody Map<String, Object> updates) {
+        return taskService.patchTask(id, updates);
     }
 }

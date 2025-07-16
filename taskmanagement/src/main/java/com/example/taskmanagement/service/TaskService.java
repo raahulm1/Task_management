@@ -5,6 +5,9 @@ import com.example.taskmanagement.repository.TaskRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Map;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 @Service
 public class TaskService {
@@ -55,6 +58,57 @@ public class TaskService {
             existing.setSubtasks(task.getSubtasks());
         }
         
+        return taskRepository.save(existing);
+    }
+
+    public Task patchTask(String id, Map<String, Object> updates) {
+        Task existing = taskRepository.findById(id).orElseThrow();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        if (updates.containsKey("name")) {
+            existing.setName((String) updates.get("name"));
+        }
+        if (updates.containsKey("description")) {
+            existing.setDescription((String) updates.get("description"));
+        }
+        if (updates.containsKey("priority")) {
+            existing.setPriority((String) updates.get("priority"));
+        }
+        if (updates.containsKey("assignedTo")) {
+            existing.setAssignedTo((String) updates.get("assignedTo"));
+        }
+        if (updates.containsKey("assignedBy")) {
+            existing.setAssignedBy((String) updates.get("assignedBy"));
+        }
+        if (updates.containsKey("dueDate")) {
+            Object dueDateObj = updates.get("dueDate");
+            if (dueDateObj instanceof String) {
+                try {
+                    existing.setDueDate(sdf.parse((String) dueDateObj));
+                } catch (ParseException e) {
+                    throw new RuntimeException("Invalid date format for dueDate", e);
+                }
+            } else if (dueDateObj instanceof java.util.Date) {
+                existing.setDueDate((java.util.Date) dueDateObj);
+            }
+        }
+        if (updates.containsKey("status")) {
+            existing.setStatus((String) updates.get("status"));
+        }
+        if (updates.containsKey("sectionId")) {
+            existing.setSectionId((String) updates.get("sectionId"));
+        }
+        if (updates.containsKey("subtasks")) {
+            Object subtasksObj = updates.get("subtasks");
+            if (subtasksObj instanceof List<?>) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    List<Task> subtasks = (List<Task>) subtasksObj;
+                    existing.setSubtasks(subtasks);
+                } catch (ClassCastException e) {
+                    throw new RuntimeException("Invalid type for subtasks", e);
+                }
+            }
+        }
         return taskRepository.save(existing);
     }
 
