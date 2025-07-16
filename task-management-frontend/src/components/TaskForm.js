@@ -3,19 +3,26 @@ import { FaChevronDown } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-function TaskForm({ onAdd, onClose }) {
+function TaskForm({ onAdd, onClose, sections = [], users = [] }) {
   const [task, setTask] = useState({
     title: "",
     description: "",
-    assignee: "",
+    assignedTo: users && users.length > 0 ? users[0].id : "",
     dueDate: null,
     status: "Todo",
+    sectionId: sections && sections.length > 0 ? sections[0].id : ""
   });
+
+  // Ensure sectionId is set to the first section if sections change
+  useEffect(() => {
+    if (sections && sections.length > 0) {
+      setTask((prev) => ({ ...prev, sectionId: prev.sectionId || sections[0].id }));
+    }
+  }, [sections]);
 
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const assignees = ["Yashaswini", "Rohit", "Priya", "Anil", "Sara"];
   const assigneeRef = useRef();
   const dateRef = useRef();
 
@@ -34,6 +41,7 @@ function TaskForm({ onAdd, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (sections && sections.length > 0 && !task.sectionId) return;
     onAdd({
       ...task,
       dueDate: task.dueDate ? task.dueDate.toISOString().split("T")[0] : "",
@@ -76,58 +84,20 @@ function TaskForm({ onAdd, onClose }) {
           />
         </div>
 
-        {/* Assignee */}
-        <div className="mb-3 position-relative" ref={assigneeRef}>
-          <div className="d-flex align-items-center justify-content-between">
-            <label className="form-label mb-0">Assignee</label>
-            <FaChevronDown
-              style={{
-                cursor: "pointer",
-                transform: showAssigneeDropdown ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s ease",
-              }}
-              onClick={() => setShowAssigneeDropdown((prev) => !prev)}
-            />
-          </div>
-          <input
-            type="text"
-            readOnly
-            value={task.assignee}
-            className="form-control mt-1"
-            style={{
-              backgroundColor: "#1e1e1e",
-              color: "white",
-              border: "1px solid #555",
-            }}
-          />
-          {showAssigneeDropdown && (
-            <div
-              className="position-absolute w-100 mt-1"
-              style={{
-                backgroundColor: "#1e1e1e",
-                border: "1px solid #555",
-                zIndex: 1000,
-              }}
-            >
-              {assignees.map((name) => (
-                <div
-                  key={name}
-                  onClick={() => {
-                    setTask({ ...task, assignee: name });
-                    setShowAssigneeDropdown(false);
-                  }}
-                  style={{
-                    padding: "8px",
-                    cursor: "pointer",
-                    color: "white",
-                    borderBottom: "1px solid #444",
-                  }}
-                >
-                  {name}
-                </div>
-              ))}
-            </div>
-          )}
+        {/* Assignee Dropdown */}
+        <div className="mb-3">
+          <label className="form-label">Assignee</label>
+          <select
+            className="form-control"
+            value={task.assignedTo}
+            onChange={e => setTask({ ...task, assignedTo: e.target.value })}
+            required
+          >
+            <option value="">Select assignee</option>
+            {users.map(u => (
+              <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
+            ))}
+          </select>
         </div>
 
         {/* Due Date */}
@@ -168,9 +138,26 @@ function TaskForm({ onAdd, onClose }) {
           )}
         </div>
 
+        {/* Section Dropdown */}
+        {sections && sections.length > 0 && (
+          <div className="mb-3">
+            <label className="form-label">Section</label>
+            <select
+              className="form-control"
+              value={task.sectionId}
+              onChange={e => setTask({ ...task, sectionId: e.target.value })}
+              required
+            >
+              {sections.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Buttons */}
         <div className="mb-3 text-end">
-          <button type="submit" className="btn btn-primary me-2">
+          <button type="submit" className="btn btn-primary me-2" disabled={sections && sections.length > 0 && !task.sectionId}>
             Add
           </button>
           <button type="button" className="btn btn-secondary" onClick={onClose}>

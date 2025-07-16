@@ -24,12 +24,17 @@ public class ProjectService {
         // Projects created by the user
         List<Project> createdProjects = projectRepository.findByMetadataCreatedBy(keycloakId);
         // Teams where the user is a member
-        List<Team> teams = teamRepository.findByMembersUserId(keycloakId);
+        List<Team> teams = teamRepository.findByMembersContaining(keycloakId);
         List<String> teamIds = teams.stream().map(Team::getId).collect(Collectors.toList());
         List<Project> teamProjects = teamIds.isEmpty() ? Collections.emptyList() : projectRepository.findByTeamIdIn(teamIds);
+        // Projects where user is directly assigned
+        List<Project> userProjects = projectRepository.findAll().stream()
+            .filter(p -> p.getUserIds() != null && p.getUserIds().contains(keycloakId))
+            .collect(Collectors.toList());
         // Combine and return unique projects
         Set<Project> allProjects = new HashSet<>(createdProjects);
         allProjects.addAll(teamProjects);
+        allProjects.addAll(userProjects);
         return new ArrayList<>(allProjects);
     }
 

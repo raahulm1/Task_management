@@ -23,35 +23,11 @@ function DashboardPage() {
     <div className="d-flex min-vh-100" style={{ background: "#2c2c2c" }}>
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={projects} loading={loading} error={error} />
 
-      <div className="flex-grow-1 p-4 text-white">
-        <h4 className="mb-4">DashBoard</h4>
-        <div className="d-flex justify-content-center align-items-center mb-4">
-          <h4>Hi,User</h4>
-        </div>
-
-        <div className="p-4 rounded shadow-sm" style={{ backgroundColor: "#2a2a2a", maxWidth: "700px", margin: "0 auto" }}>
-          <h4 className="text-center mb-4">👤My Projects</h4>
-          {loading ? (
-            <p className="text-center text-white">Loading projects...</p>
-          ) : error ? (
-            <p className="text-center text-danger">{error}</p>
-          ) : (
-            <ul className="list-group">
-              {projects.length === 0 ? (
-                <li className="list-group-item bg-dark text-white text-center border-0">No projects found.</li>
-              ) : (
-                projects.map((proj) => (
-                  <li key={proj.id} className="list-group-item d-flex justify-content-between align-items-center bg-dark text-white border-secondary">
-                    {proj.name}
-                    <button onClick={() => navigate(`/project/${proj.id}`)} className="btn btn-sm btn-outline-primary">View</button>
-                  </li>
-                ))
-              )}
-            </ul>
-          )}
-        </div>
+      <div className="container mt-4">
+        <div className="alert alert-info text-center">This is dashboard for time being</div>
       </div>
-    </div>
+
+   </div>
   );
 }
 

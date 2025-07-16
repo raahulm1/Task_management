@@ -3,16 +3,11 @@ import React from 'react';
 function ProjectNavigation({ activeView, onViewChange, projectName }) {
   return (
     <div className="mb-4">
-      <h2 className="mb-3 text-center">{projectName}</h2>
-      <div className="d-flex justify-content-center">
+      <div className="d-flex align-items-center mb-2">
+        <h2 className="mb-0 me-4" style={{ fontWeight: 600 }}>{projectName}</h2>
+      </div>
+      <div className="d-flex">
         <div className="btn-group" role="group" aria-label="Project view navigation">
-          <button
-            type="button"
-            className={`btn ${activeView === 'overview' ? 'btn-primary' : 'btn-outline-primary'}`}
-            onClick={() => onViewChange('overview')}
-          >
-            Overview
-          </button>
           <button
             type="button"
             className={`btn ${activeView === 'list' ? 'btn-primary' : 'btn-outline-primary'}`}
@@ -26,6 +21,13 @@ function ProjectNavigation({ activeView, onViewChange, projectName }) {
             onClick={() => onViewChange('board')}
           >
             Board
+          </button>
+          <button
+            type="button"
+            className={`btn ${activeView === 'overview' ? 'btn-primary' : 'btn-outline-primary'}`}
+            onClick={() => onViewChange('overview')}
+          >
+            Overview
           </button>
         </div>
       </div>

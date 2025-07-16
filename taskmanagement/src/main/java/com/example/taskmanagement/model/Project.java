@@ -3,6 +3,7 @@ package com.example.taskmanagement.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.util.Date;
+import java.util.List;
 
 @Document(collection = "projects")
 public class Project {
@@ -10,7 +11,7 @@ public class Project {
     private String id;
     private String name;
     private String teamId;
-    private String description;
+    private List<String> userIds; // List of user Keycloak IDs
     private Metadata metadata;
 
     public static class Metadata {
@@ -30,8 +31,8 @@ public class Project {
     public void setName(String name) { this.name = name; }
     public String getTeamId() { return teamId; }
     public void setTeamId(String teamId) { this.teamId = teamId; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
+    public List<String> getUserIds() { return userIds; }
+    public void setUserIds(List<String> userIds) { this.userIds = userIds; }
     public Metadata getMetadata() { return metadata; }
     public void setMetadata(Metadata metadata) { this.metadata = metadata; }
 }

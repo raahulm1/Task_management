@@ -1,8 +1,8 @@
-// ✅ ProjectPage.jsx with Redux
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchTasks, createTask, updateTaskStatus } from "../features/tasks/tasksSlice";
+import { fetchProjects } from "../features/projects/projectsSlice";
 import Sidebar from "../components/Sidebar";
 import KanbanBoard from "../components/KanbanBoard";
 import ListView from "../components/ListView";
@@ -10,6 +10,8 @@ import Overview from "../components/Overview";
 import ProjectNavigation from "../components/ProjectNavigation";
 import EditTaskModal from "../components/EditTaskModal";
 import { getProjectById } from "../api/projects";
+import { getSections } from "../api/sections";
+import { getUsers } from "../api/users";
 import { useKeycloak } from '@react-keycloak/web';
 
 function ProjectPage() {
@@ -19,10 +21,13 @@ function ProjectPage() {
   const { keycloak } = useKeycloak();
 
   const { list: tasks, loading, error } = useSelector((state) => state.tasks);
+  const { list: projects, loading: projectsLoading, error: projectsError } = useSelector((state) => state.projects);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [projectName, setProjectName] = useState("");
-  const [activeView, setActiveView] = useState("board"); // Default to board view
+  const [activeView, setActiveView] = useState("list"); // Default to board view
   const [collapsed, setCollapsed] = useState(false);
+  const [sections, setSections] = useState([]);
+  const [users, setUsers] = useState([]);
 
   const fetchProjectName = async () => {
     try {
@@ -36,21 +41,74 @@ function ProjectPage() {
   useEffect(() => {
     if (keycloak.authenticated) {
       dispatch(fetchTasks({ projectId: id, token: keycloak.token }));
+      if (projects.length === 0) {
+        dispatch(fetchProjects(keycloak.token));
+      }
     }
-  }, [dispatch, id, keycloak]);
+  }, [dispatch, id, keycloak, projects.length]);
 
   useEffect(() => {
     fetchProjectName();
     // eslint-disable-next-line
   }, [id, keycloak.token]);
 
+  // Fetch sections for this project
+  const fetchSections = async () => {
+    if (!keycloak.token) return;
+    try {
+      const data = await getSections(id, keycloak.token);
+      setSections(data);
+    } catch {
+      setSections([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchSections();
+    // eslint-disable-next-line
+  }, [id, keycloak.token]);
+
+  useEffect(() => {
+    if (keycloak && keycloak.token) {
+      getUsers(keycloak.token).then(setUsers).catch(() => setUsers([]));
+    }
+  }, [keycloak]);
+
+  // Group tasks by sectionId
+  const groupedSections = React.useMemo(() => {
+    if (!sections || sections.length === 0) {
+      return [
+        { name: 'Main Section', tasks: tasks.filter(t => !t.sectionId) }
+      ];
+    }
+    return sections.map(section => ({
+      name: section.name,
+      id: section.id,
+      tasks: tasks.filter(t => t.sectionId === section.id)
+    }));
+  }, [sections, tasks]);
+
   const handleAddTask = async (task) => {
-    await dispatch(createTask({ task, projectId: id, token: keycloak.token }));
+    // If task is an event (from Add Task button), ignore
+    if (typeof task?.preventDefault === 'function') return;
+    // Ensure projectId and sectionId are set
+    const payload = { ...task, projectId: id };
+    await dispatch(createTask({ task: payload, projectId: id, token: keycloak.token }));
+    // Optionally, refresh tasks after creation
+    dispatch(fetchTasks({ projectId: id, token: keycloak.token }));
   };
 
   const handleStatusChange = (taskId, newStatus) => {
     dispatch(updateTaskStatus({ taskId, newStatus, projectId: id, token: keycloak.token }));
   };
+
+  const handleAddTaskClick = () => {
+    navigate(`/project/${id}/add-task`);
+  };
+  const handleFilter = () => alert('Filter (to be implemented)');
+  const handleSort = () => alert('Sort (to be implemented)');
+  const handleSearch = () => {};
+  const handleOptions = () => alert('Options (to be implemented)');
 
   const renderView = () => {
     if (loading) {
@@ -65,7 +123,20 @@ function ProjectPage() {
       case "overview":
         return <Overview tasks={tasks} projectName={projectName} />;
       case "list":
-        return <ListView tasks={tasks} onStatusChange={handleStatusChange} />;
+        return <ListView
+          tasks={tasks}
+          projectName={projectName}
+          onStatusChange={handleStatusChange}
+          onAddTask={handleAddTask}
+          onFilter={handleFilter}
+          onSort={handleSort}
+          onSearch={handleSearch}
+          onOptions={handleOptions}
+          sections={groupedSections}
+          projectId={id}
+          onSectionCreated={fetchSections}
+          users={users}
+        />;
       case "board":
         return <KanbanBoard tasks={tasks} onStatusChange={handleStatusChange} />;
       default:
@@ -75,7 +146,9 @@ function ProjectPage() {
 
   return (
     <div className="d-flex min-vh-100" style={{ backgroundColor: "#1e1e1e", color: "white" }}>
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={[]} loading={false} error={null} showProjects={false} />
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={projects} loading={projectsLoading} error={projectsError} showProjects={true}
+        sections={sections.map(s => ({ id: s.id, name: s.name }))}
+      />
 
       <div className="flex-grow-1 p-4">
         <div className="p-4 rounded shadow-sm" style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}>
@@ -85,31 +158,16 @@ function ProjectPage() {
             projectName={projectName}
           />
 
-          <div className="text-center mb-3 position-relative d-flex justify-content-center">
-            <button className="btn btn-primary d-flex align-items-center" onClick={() => navigate(`/project/${id}/add-task`)}>
+          {/* Add Task button row, left-aligned */}
+          <div className="d-flex align-items-center mb-3">
+            <button className="btn btn-success" onClick={handleAddTaskClick}>
               <i className="bi bi-plus-lg me-2"></i> Add Task
             </button>
-            <button className="btn btn-dark ms-2 d-flex align-items-center" onClick={() => setShowTaskDropdown((prev) => !prev)}>
-              <i className="bi bi-caret-down-fill"></i>
-            </button>
-
-            {showTaskDropdown && (
-              <div className="position-absolute mt-5 bg-dark text-white p-3 rounded shadow" style={{ top: "100%", zIndex: 10 }}>
-                <div>
-                  <strong>Task: Design UI</strong>
-                  <ul className="mb-2">
-                    <li>Subtask: Create wireframes</li>
-                    <li>Subtask: Choose color palette</li>
-                  </ul>
-                </div>
-              </div>
-            )}
           </div>
 
           {renderView()}
         </div>
       </div>
-      
       {/* Edit Task Modal */}
       <EditTaskModal />
     </div>

@@ -6,6 +6,9 @@ import { getProjectById } from "../api/projects";
 import { addTask } from "../api/tasks";
 import { useState } from "react";
 import { useKeycloak } from '@react-keycloak/web';
+import { useDispatch, useSelector } from "react-redux";
+import { fetchProjects } from "../features/projects/projectsSlice";
+import { getUsers } from "../api/users";
 
 function AddTaskPage() {
   const { id } = useParams();
@@ -13,6 +16,9 @@ function AddTaskPage() {
   const [projectName, setProjectName] = React.useState("");
   const [collapsed, setCollapsed] = useState(false);
   const { keycloak } = useKeycloak();
+  const dispatch = useDispatch();
+  const { list: projects, loading: projectsLoading, error: projectsError } = useSelector((state) => state.projects);
+  const [users, setUsers] = useState([]);
 
   React.useEffect(() => {
     const fetchProjectName = async () => {
@@ -24,7 +30,16 @@ function AddTaskPage() {
       }
     };
     fetchProjectName();
-  }, [id, keycloak.token]);
+    if (keycloak.authenticated && projects.length === 0) {
+      dispatch(fetchProjects(keycloak.token));
+    }
+  }, [id, keycloak.token, keycloak.authenticated, dispatch, projects.length]);
+
+  React.useEffect(() => {
+    if (keycloak && keycloak.token) {
+      getUsers(keycloak.token).then(setUsers).catch(() => setUsers([]));
+    }
+  }, [keycloak]);
 
   const handleAddTask = async (task) => {
     try {
@@ -38,12 +53,12 @@ function AddTaskPage() {
 
   return (
     <div className="d-flex min-vh-100" style={{ backgroundColor: "#1e1e1e", color: "white" }}>
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={[]} loading={false} error={null} showProjects={false} />
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={projects} loading={projectsLoading} error={projectsError} showProjects={true} />
 
       <div className="flex-grow-1 p-4">
         <div className="p-4 rounded shadow-sm" style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}>
           <h2 className="mb-4 text-center">Add Task to {projectName || id}</h2>
-          <TaskForm onAdd={handleAddTask} onClose={() => navigate(`/project/${id}`)} />
+          <TaskForm users={users} onAdd={handleAddTask} onClose={() => navigate(`/project/${id}`)} />
         </div>
       </div>
     </div>

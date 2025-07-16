@@ -10,6 +10,9 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import AddTaskPage from "./pages/AddTaskPage";
+//import MyTasksPage from "./pages/MyTasksPage";
+import MyProjectsPage from "./pages/MyProjectsPage";
+
 
 function App() {
   return (
@@ -30,6 +33,11 @@ function App() {
         <Route path="/project/:id/add-task" element={
           <ProtectedRoute>
             <AddTaskPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-projects" element={
+          <ProtectedRoute>
+            <MyProjectsPage />
           </ProtectedRoute>
         } />
       </Routes>

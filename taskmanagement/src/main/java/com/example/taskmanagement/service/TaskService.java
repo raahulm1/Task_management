@@ -15,6 +15,10 @@ public class TaskService {
         return taskRepository.findByProjectId(projectId);
     }
 
+    public List<Task> getTasksForSection(String sectionId) {
+        return taskRepository.findBySectionId(sectionId);
+    }
+
     public Task addTask(Task task) {
         return taskRepository.save(task);
     }
@@ -23,8 +27,8 @@ public class TaskService {
         Task existing = taskRepository.findById(id).orElseThrow();
         
         // Only update fields that are not null to preserve existing data
-        if (task.getTitle() != null) {
-            existing.setTitle(task.getTitle());
+        if (task.getName() != null) {
+            existing.setName(task.getName());
         }
         if (task.getDescription() != null) {
             existing.setDescription(task.getDescription());
@@ -32,14 +36,23 @@ public class TaskService {
         if (task.getPriority() != null) {
             existing.setPriority(task.getPriority());
         }
-        if (task.getAssignee() != null) {
-            existing.setAssignee(task.getAssignee());
+        if (task.getAssignedTo() != null) {
+            existing.setAssignedTo(task.getAssignedTo());
+        }
+        if (task.getAssignedBy() != null) {
+            existing.setAssignedBy(task.getAssignedBy());
         }
         if (task.getDueDate() != null) {
             existing.setDueDate(task.getDueDate());
         }
         if (task.getStatus() != null) {
             existing.setStatus(task.getStatus());
+        }
+        if (task.getSectionId() != null) {
+            existing.setSectionId(task.getSectionId());
+        }
+        if (task.getSubtasks() != null) {
+            existing.setSubtasks(task.getSubtasks());
         }
         
         return taskRepository.save(existing);
