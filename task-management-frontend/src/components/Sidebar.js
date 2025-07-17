@@ -12,12 +12,11 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
   const navigate = useNavigate();
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
   const [showCreateDropdown, setShowCreateDropdown] = useState(false);
-  const [openModal, setOpenModal] = useState(null); // 'project' | 'task' | 'team' | null
+  const [openModal, setOpenModal] = useState(null);
   const [users, setUsers] = useState([]);
   const [teams, setTeams] = useState([]);
   const { keycloak } = useKeycloak();
 
-  // Fetch users and teams for dropdowns
   useEffect(() => {
     if ((openModal === 'project' || openModal === 'team' || openModal === 'task') && keycloak?.token) {
       getUsers(keycloak.token).then(setUsers).catch(() => setUsers([]));
@@ -32,7 +31,6 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
     keycloak.logout({ redirectUri: window.location.origin + '/' });
   };
 
-  // Modal scaffolds
   const renderModal = () => {
     if (!openModal) return null;
     let title = '';
@@ -44,7 +42,7 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         break;
       case 'task':
         title = 'Create Task';
-        body = <TaskForm users={users} sections={sections} onAdd={(task) => { console.log('Create Task:', task); setOpenModal(null); }} onClose={() => setOpenModal(null)} />;
+        body = <TaskForm users={users} sections={sections} onAdd={() => setOpenModal(null)} onClose={() => setOpenModal(null)} />;
         break;
       case 'team':
         title = 'Create Team';
@@ -61,22 +59,20 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
               <h5 className="modal-title">{title}</h5>
               <button type="button" className="btn-close btn-close-white" onClick={() => setOpenModal(null)}></button>
             </div>
-            <div className="modal-body">
-              {body}
-            </div>
+            <div className="modal-body">{body}</div>
           </div>
         </div>
       </div>
     );
   };
 
-  // Project form
   const ProjectForm = ({ onClose }) => {
     const [name, setName] = useState("");
     const [selectedUsers, setSelectedUsers] = useState([]);
     const [team, setTeam] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
     const handleSubmit = async (e) => {
       e.preventDefault();
       setError("");
@@ -89,13 +85,14 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         await createProject({ name, teamId: team, userIds: selectedUsers }, keycloak.token);
         alert("Project created!");
         setOpenModal(null);
-        window.location.reload(); // Or call a prop to refresh project list
+        window.location.reload();
       } catch (err) {
         setError("Failed to create project");
       } finally {
         setLoading(false);
       }
     };
+
     return (
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
@@ -124,12 +121,12 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
     );
   };
 
-  // Team form
   const TeamForm = ({ onClose }) => {
     const [name, setName] = useState("");
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
     const handleSubmit = async (e) => {
       e.preventDefault();
       setError("");
@@ -142,13 +139,14 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         await createTeam({ name, members }, keycloak.token);
         alert("Team created!");
         setOpenModal(null);
-        window.location.reload(); // Or call a prop to refresh team list
+        window.location.reload();
       } catch (err) {
         setError("Failed to create team");
       } finally {
         setLoading(false);
       }
     };
+
     return (
       <form onSubmit={handleSubmit}>
         <div className="mb-3">
@@ -195,7 +193,8 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
           </span>
         )}
       </div>
-        {/* Create Button */}
+
+      {/* Create Button */}
       <div className="mb-2 position-relative">
         <button
           className={`btn btn-success w-100 ${collapsed ? "mx-auto" : ""}`}
@@ -210,23 +209,30 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
             style={{ backgroundColor: "#222", border: "1px solid #555", zIndex: 1000 }}
           >
             <div
-              className="p-2 text-white"
+              className="p-2 text-white d-flex align-items-center"
               style={{ cursor: "pointer" }}
               onClick={() => { setOpenModal('project'); setShowCreateDropdown(false); }}
-            >Create Project</div>
+            >
+              <i className="bi bi-kanban me-2"></i> Create Project
+            </div>
             <div
-              className="p-2 text-white"
+              className="p-2 text-white d-flex align-items-center"
               style={{ cursor: "pointer" }}
               onClick={() => { setOpenModal('task'); setShowCreateDropdown(false); }}
-            >Create Task</div>
+            >
+              <i className="bi bi-card-checklist me-2"></i> Create Task
+            </div>
             <div
-              className="p-2 text-white"
+              className="p-2 text-white d-flex align-items-center"
               style={{ cursor: "pointer" }}
               onClick={() => { setOpenModal('team'); setShowCreateDropdown(false); }}
-            >Create Team</div>
+            >
+              <i className="bi bi-people me-2"></i> Create Team
+            </div>
           </div>
         )}
       </div>
+
       {/* Navigation */}
       <ul className="nav flex-column mb-3">
         <li className="nav-item">
@@ -235,6 +241,7 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
             onClick={() => navigate("/dashboard")}
             style={{ padding: "0.5rem", borderRadius: "5px" }}
           >
+            <i className="bi bi-house me-2"></i>
             {!collapsed && "Home"}
           </button>
         </li>
@@ -244,21 +251,23 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
             onClick={() => navigate("/my-tasks")}
             style={{ padding: "0.5rem", borderRadius: "5px" }}
           >
+            <i className="bi bi-list-check me-2"></i>
             {!collapsed && "My Tasks"}
           </button>
         </li>
         <li className="nav-item">
           <button
             className="nav-link text-white d-flex align-items-center"
-            style={{ padding: "0.5rem", borderRadius: "5px" }}
             onClick={() => navigate("/my-projects")}
+            style={{ padding: "0.5rem", borderRadius: "5px" }}
           >
+            <i className="bi bi-kanban me-2"></i>
             {!collapsed && "My Projects"}
           </button>
         </li>
       </ul>
 
-      {/* Projects List (always visible below My Projects) */}
+      {/* Projects */}
       {!collapsed && showProjects && (
         <ul className="list-unstyled mb-3 ps-3">
           {loading ? (
@@ -271,10 +280,11 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
             projects.map((proj) => (
               <li
                 key={proj.id}
-                className="mb-1 text-white"
+                className="mb-1 text-white d-flex align-items-center"
                 style={{ cursor: "pointer" }}
                 onClick={() => navigate(`/project/${proj.id}`)}
               >
+                <i className="bi bi-folder2-open me-2 text-secondary"></i>
                 {proj.name}
               </li>
             ))
@@ -282,8 +292,7 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         </ul>
       )}
 
-      
-
+      {/* Logout */}
       <button
         className={`btn btn-danger mt-2 ${collapsed ? "mx-auto" : ""}`}
         onClick={handleLogout}
