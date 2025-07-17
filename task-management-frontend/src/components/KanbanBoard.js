@@ -101,42 +101,16 @@ function KanbanBoard({ tasks }) {
                     color: "white",
                     border: getStatusBorder(task.status),
                     transition: "all 0.3s ease",
+                    cursor: "pointer"
                   }}
+                  onClick={() => handleEdit(task)}
                 >
-                  <div className="d-flex justify-content-between align-items-center">
-                    <h5 className="mb-1">{task.title}</h5>
-                    <div>
-                      <button
-                        className="btn btn-sm btn-outline-light me-1"
-                        onClick={() => handleEdit(task)}
-                      >
-                        <i className="bi bi-pencil-fill"></i>
-                      </button>
-                      <button
-                        className="btn btn-sm btn-outline-danger"
-                        onClick={() => handleDelete(task.id)}
-                      >
-                        <i className="bi bi-trash-fill"></i>
-                      </button>
-                    </div>
-                  </div>
-
-                  {status !== "Completed" && (
-                    <p className="mb-1">{task.description}</p>
-                  )}
+                  <h5 className="mb-1" style={{ color: "white" }}>{task.name}</h5>
+                  <p className="mb-1" style={{ color: "white" }}>{task.description}</p>
                   {task.priority && (
-                    <small className="text-muted">
+                    <small style={{ color: "white" }}>
                       Priority: {task.priority}
                     </small>
-                  )}
-
-                  {messageTaskId === task.id && (
-                    <div
-                      className="mt-2 text-success"
-                      style={{ fontSize: "0.9rem" }}
-                    >
-                      {messageText}
-                    </div>
                   )}
                 </div>
               ))}

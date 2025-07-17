@@ -10,7 +10,9 @@ export async function getTasks(projectId, token) {
     }
   });
   if (!response.ok) throw new Error('Failed to fetch tasks');
-  return response.json();
+  const data = await response.json();
+  // Patch: map _id to id for all tasks
+  return Array.isArray(data) ? data.map(task => ({ ...task, id: task.id || task._id })) : data;
 }
 
 export async function addTask(task, token) {
@@ -48,4 +50,17 @@ export async function deleteTask(id, token) {
   });
   if (!response.ok) throw new Error('Failed to delete task');
   return response.ok;
+}
+
+export async function patchTask(id, updates, token) {
+  const response = await fetch(`${API_URL}/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(updates)
+  });
+  if (!response.ok) throw new Error('Failed to patch task');
+  return response.json();
 }

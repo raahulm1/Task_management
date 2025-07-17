@@ -9,6 +9,7 @@ import { useKeycloak } from '@react-keycloak/web';
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProjects } from "../features/projects/projectsSlice";
 import { getUsers } from "../api/users";
+import { getSections } from "../api/sections";
 
 function AddTaskPage() {
   const { id } = useParams();
@@ -19,6 +20,7 @@ function AddTaskPage() {
   const dispatch = useDispatch();
   const { list: projects, loading: projectsLoading, error: projectsError } = useSelector((state) => state.projects);
   const [users, setUsers] = useState([]);
+  const [sections, setSections] = useState([]);
 
   React.useEffect(() => {
     const fetchProjectName = async () => {
@@ -38,8 +40,9 @@ function AddTaskPage() {
   React.useEffect(() => {
     if (keycloak && keycloak.token) {
       getUsers(keycloak.token).then(setUsers).catch(() => setUsers([]));
+      getSections(id, keycloak.token).then(setSections).catch(() => setSections([]));
     }
-  }, [keycloak]);
+  }, [keycloak, id]);
 
   const handleAddTask = async (task) => {
     try {
@@ -51,6 +54,12 @@ function AddTaskPage() {
     }
   };
 
+  const refreshSections = () => {
+    if (keycloak && keycloak.token) {
+      getSections(id, keycloak.token).then(setSections).catch(() => setSections([]));
+    }
+  };
+
   return (
     <div className="d-flex min-vh-100" style={{ backgroundColor: "#1e1e1e", color: "white" }}>
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={projects} loading={projectsLoading} error={projectsError} showProjects={true} />
@@ -58,7 +67,15 @@ function AddTaskPage() {
       <div className="flex-grow-1 p-4">
         <div className="p-4 rounded shadow-sm" style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}>
           <h2 className="mb-4 text-center">Add Task to {projectName || id}</h2>
-          <TaskForm users={users} onAdd={handleAddTask} onClose={() => navigate(`/project/${id}`)} />
+          <TaskForm
+            users={users}
+            sections={sections}
+            token={keycloak.token}
+            projectId={id}
+            onAdd={handleAddTask}
+            onClose={() => navigate(`/project/${id}`)}
+            onSectionCreated={refreshSections}
+          />
         </div>
       </div>
     </div>

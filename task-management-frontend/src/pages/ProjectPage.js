@@ -169,7 +169,7 @@ function ProjectPage() {
         </div>
       </div>
       {/* Edit Task Modal */}
-      <EditTaskModal />
+      <EditTaskModal users={users} sections={sections} />
     </div>
   );
 }

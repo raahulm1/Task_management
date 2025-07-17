@@ -1,38 +1,45 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { clearEditingTask, updateTaskAsync } from "../features/tasks/tasksSlice";
+import { clearEditingTask, updateTaskAsync, deleteTask } from "../features/tasks/tasksSlice";
+import { patchTaskAsync } from "../features/tasks/tasksSlice";
 import { FaChevronDown } from "react-icons/fa";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { useKeycloak } from '@react-keycloak/web';
 
-function EditTaskModal() {
+function EditTaskModal({ users = [], sections = [] }) {
   const dispatch = useDispatch();
+  const { keycloak } = useKeycloak();
   const editingTask = useSelector((state) => state.tasks.editingTask);
-  const [task, setTask] = useState({
-    title: "",
-    description: "",
-    assignee: "",
-    dueDate: null,
-    status: "Todo",
-  });
+  const [task, setTask] = useState({});
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [changedFields, setChangedFields] = useState({});
 
-  const assignees = ["Yashaswini", "Rohit", "Priya", "Anil", "Sara"];
   const statuses = ["Todo", "In Progress", "Completed"];
 
   useEffect(() => {
     if (editingTask) {
       setTask({
-        title: editingTask.title || "",
+        title: editingTask.title || editingTask.name || "",
         description: editingTask.description || "",
-        assignee: editingTask.assignee || "",
+        assignedTo: editingTask.assignedTo || editingTask.assignee || "",
         dueDate: editingTask.dueDate ? new Date(editingTask.dueDate) : null,
         status: editingTask.status || "Todo",
+        sectionId: editingTask.sectionId || "",
+        priority: editingTask.priority || "",
+        // Add any other fields you want editable
       });
+      setChangedFields({});
     }
   }, [editingTask]);
+
+  // Helper to track changes
+  const handleFieldChange = (field, value) => {
+    setTask((prev) => ({ ...prev, [field]: value }));
+    setChangedFields((prev) => ({ ...prev, [field]: true }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,19 +47,47 @@ function EditTaskModal() {
 
     setLoading(true);
     try {
-      await dispatch(updateTaskAsync({
-        taskId: editingTask.id,
-        taskData: {
-          ...task,
-          dueDate: task.dueDate ? task.dueDate.toISOString().split("T")[0] : "",
-        },
+      // Build updates object with only changed fields
+      const updates = {};
+      if (changedFields.title) updates.name = task.title;
+      if (changedFields.description) updates.description = task.description;
+      if (changedFields.status) updates.status = task.status;
+      if (changedFields.assignedTo) updates.assignedTo = task.assignedTo;
+      if (changedFields.dueDate) updates.dueDate = task.dueDate ? task.dueDate.toISOString().split("T")[0] : "";
+      if (changedFields.sectionId) updates.sectionId = task.sectionId;
+      if (changedFields.priority) updates.priority = task.priority;
+      if (Object.keys(updates).length === 0) {
+        setLoading(false);
+        handleClose();
+        return;
+      }
+      await dispatch(patchTaskAsync({
+        taskId: editingTask.id || editingTask._id,
+        updates,
         projectId: editingTask.projectId,
+        token: keycloak.token,
       }));
-      
       handleClose();
     } catch (error) {
       console.error("Failed to update task:", error);
       alert("Failed to update task");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!editingTask) return;
+    setLoading(true);
+    try {
+      await dispatch(deleteTask({
+        taskId: editingTask.id || editingTask._id,
+        projectId: editingTask.projectId,
+        token: keycloak.token,
+      }));
+      handleClose();
+    } catch (error) {
+      alert("Failed to delete task");
     } finally {
       setLoading(false);
     }
@@ -76,16 +111,17 @@ function EditTaskModal() {
               onClick={handleClose}
             ></button>
           </div>
-          
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
+                           
+
               {/* Title */}
               <div className="mb-3">
                 <label className="form-label">Title</label>
                 <input
                   type="text"
                   value={task.title}
-                  onChange={(e) => setTask({ ...task, title: e.target.value })}
+                  onChange={(e) => handleFieldChange("title", e.target.value)}
                   className="form-control"
                   required
                   style={{
@@ -101,7 +137,7 @@ function EditTaskModal() {
                 <label className="form-label">Description</label>
                 <textarea
                   value={task.description}
-                  onChange={(e) => setTask({ ...task, description: e.target.value })}
+                  onChange={(e) => handleFieldChange("description", e.target.value)}
                   className="form-control"
                   required
                   style={{
@@ -117,7 +153,7 @@ function EditTaskModal() {
                 <label className="form-label">Status</label>
                 <select
                   value={task.status}
-                  onChange={(e) => setTask({ ...task, status: e.target.value })}
+                  onChange={(e) => handleFieldChange("status", e.target.value)}
                   className="form-control"
                   style={{
                     backgroundColor: "#1e1e1e",
@@ -133,58 +169,20 @@ function EditTaskModal() {
                 </select>
               </div>
 
-              {/* Assignee */}
-              <div className="mb-3 position-relative">
-                <div className="d-flex align-items-center justify-content-between">
-                  <label className="form-label mb-0">Assignee</label>
-                  <FaChevronDown
-                    style={{
-                      cursor: "pointer",
-                      transform: showAssigneeDropdown ? "rotate(180deg)" : "rotate(0deg)",
-                      transition: "transform 0.2s ease",
-                    }}
-                    onClick={() => setShowAssigneeDropdown((prev) => !prev)}
-                  />
-                </div>
-                <input
-                  type="text"
-                  readOnly
-                  value={task.assignee}
-                  className="form-control mt-1"
-                  style={{
-                    backgroundColor: "#1e1e1e",
-                    color: "white",
-                    border: "1px solid #555",
-                  }}
-                />
-                {showAssigneeDropdown && (
-                  <div
-                    className="position-absolute w-100 mt-1"
-                    style={{
-                      backgroundColor: "#1e1e1e",
-                      border: "1px solid #555",
-                      zIndex: 1000,
-                    }}
-                  >
-                    {assignees.map((name) => (
-                      <div
-                        key={name}
-                        onClick={() => {
-                          setTask({ ...task, assignee: name });
-                          setShowAssigneeDropdown(false);
-                        }}
-                        style={{
-                          padding: "8px",
-                          cursor: "pointer",
-                          color: "white",
-                          borderBottom: "1px solid #444",
-                        }}
-                      >
-                        {name}
-                      </div>
-                    ))}
-                  </div>
-                )}
+              {/* Assignee Dropdown */}
+              <div className="mb-3">
+                <label className="form-label">Assignee</label>
+                <select
+                  className="form-control"
+                  value={task.assignedTo}
+                  onChange={e => handleFieldChange("assignedTo", e.target.value)}
+                  required
+                >
+                  <option value="">Select assignee</option>
+                  {users.map(u => (
+                    <option key={u.id || u.keycloakId} value={u.id || u.keycloakId}>{u.name} ({u.email})</option>
+                  ))}
+                </select>
               </div>
 
               {/* Due Date */}
@@ -216,7 +214,7 @@ function EditTaskModal() {
                     <DatePicker
                       selected={task.dueDate}
                       onChange={(date) => {
-                        setTask({ ...task, dueDate: date });
+                        handleFieldChange("dueDate", date);
                         setShowDatePicker(false);
                       }}
                       inline
@@ -224,6 +222,41 @@ function EditTaskModal() {
                   </div>
                 )}
               </div>
+
+              {/* Section Dropdown */}
+              {sections && sections.length > 0 && (
+                <div className="mb-3">
+                  <label className="form-label">Section</label>
+                  <select
+                    className="form-control"
+                    value={task.sectionId}
+                    onChange={e => handleFieldChange("sectionId", e.target.value)}
+                    required
+                  >
+                    {sections.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Priority */}
+              <div className="mb-3">
+                <label className="form-label">Priority</label>
+                <select
+                  className="form-control"
+                  value={task.priority}
+                  onChange={e => handleFieldChange("priority", e.target.value)}
+                >
+                  <option value="">Select priority</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+
+              {/* Add more fields as needed */}
+
             </div>
 
             <div className="modal-footer border-secondary">
@@ -241,6 +274,14 @@ function EditTaskModal() {
                 disabled={loading}
               >
                 {loading ? "Updating..." : "Update Task"}
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleDelete}
+                disabled={loading}
+              >
+                Delete
               </button>
             </div>
           </form>

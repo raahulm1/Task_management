@@ -104,14 +104,14 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         </div>
         <div className="mb-3">
           <label className="form-label">Team</label>
-          <select className="form-control" value={team} onChange={e => setTeam(e.target.value)} required>
+          <select className="form-select" value={team} onChange={e => setTeam(e.target.value)} required>
             <option value="">Select team</option>
             {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
         <div className="mb-3">
           <label className="form-label">Users</label>
-          <select className="form-control" multiple value={selectedUsers} onChange={e => setSelectedUsers(Array.from(e.target.selectedOptions, o => o.value))}>
+          <select className="form-select" multiple value={selectedUsers} onChange={e => setSelectedUsers(Array.from(e.target.selectedOptions, o => o.value))}>
             {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
           </select>
         </div>
@@ -157,7 +157,7 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         </div>
         <div className="mb-3">
           <label className="form-label">Members</label>
-          <select className="form-control" multiple value={members} onChange={e => setMembers(Array.from(e.target.selectedOptions, o => o.value))}>
+          <select className="form-select" multiple value={members} onChange={e => setMembers(Array.from(e.target.selectedOptions, o => o.value))}>
             {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
           </select>
         </div>
