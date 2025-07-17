@@ -22,7 +22,7 @@ function EditTaskModal({ users = [], sections = [] }) {
   useEffect(() => {
     if (editingTask) {
       setTask({
-        title: editingTask.title || editingTask.name || "",
+        name: editingTask.name || editingTask.title || "",
         description: editingTask.description || "",
         assignedTo: editingTask.assignedTo || editingTask.assignee || "",
         dueDate: editingTask.dueDate ? new Date(editingTask.dueDate) : null,
@@ -49,7 +49,7 @@ function EditTaskModal({ users = [], sections = [] }) {
     try {
       // Build updates object with only changed fields
       const updates = {};
-      if (changedFields.title) updates.name = task.title;
+      if (changedFields.name) updates.name = task.name;
       if (changedFields.description) updates.description = task.description;
       if (changedFields.status) updates.status = task.status;
       if (changedFields.assignedTo) updates.assignedTo = task.assignedTo;
@@ -115,13 +115,13 @@ function EditTaskModal({ users = [], sections = [] }) {
             <div className="modal-body">
                            
 
-              {/* Title */}
+              {/* Name */}
               <div className="mb-3">
-                <label className="form-label">Title</label>
+                <label className="form-label">Name</label>
                 <input
                   type="text"
-                  value={task.title}
-                  onChange={(e) => handleFieldChange("title", e.target.value)}
+                  value={task.name}
+                  onChange={(e) => handleFieldChange("name", e.target.value)}
                   className="form-control"
                   required
                   style={{

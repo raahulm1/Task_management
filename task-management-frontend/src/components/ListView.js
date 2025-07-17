@@ -39,8 +39,7 @@ function ListView({
     dueDate: '',
     assignedTo: '',
   });
-  const [showFilterCard, setShowFilterCard] = useState(false);
-  const [showSortOptions, setShowSortOptions] = useState(false);
+  const [activePanel, setActivePanel] = useState(null); // 'filter' | 'sort' | 'options' | null
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
@@ -260,30 +259,36 @@ function ListView({
           />
           <button
             className="btn btn-outline-light btn-sm"
-            onClick={() => setShowFilterCard(v => !v)}
+            onClick={() => setActivePanel(activePanel === 'filter' ? null : 'filter')}
             title="Filter"
           >
             <i className="bi bi-funnel"></i>
           </button>
           <button
             className="btn btn-outline-light btn-sm"
-            onClick={() => setShowSortOptions(v => !v)}
+            onClick={() => setActivePanel(activePanel === 'sort' ? null : 'sort')}
             title="Sort"
           >
             <i className="bi bi-sort-alpha-down"></i>
           </button>
-          <button className="btn btn-outline-light btn-sm" onClick={onOptions} title="Options"><i className="bi bi-three-dots-vertical"></i></button>
+          <button
+            className="btn btn-outline-light btn-sm"
+            onClick={() => setActivePanel(activePanel === 'options' ? null : 'options')}
+            title="Options"
+          >
+            <i className="bi bi-three-dots-vertical"></i>
+          </button>
         </div>
       </div>
       {/* Filter Card (toggle) */}
-      {showFilterCard && (
+      {activePanel === 'filter' && (
         <div className="card mb-2 p-2" style={{ background: '#23272b', color: 'white', maxWidth: 900 }}>
           <div className="row g-2 align-items-center">
             <div className="col-auto">
               <select
                 className="form-control form-control-sm"
                 value={filters.status}
-                onChange={e => { setFilters(f => ({ ...f, status: e.target.value })); setShowFilterCard(false); }}
+                onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
               >
                 <option value="">All Statuses</option>
                 <option value="Todo">Todo</option>
@@ -296,14 +301,14 @@ function ListView({
                 type="date"
                 className="form-control form-control-sm"
                 value={filters.dueDate}
-                onChange={e => { setFilters(f => ({ ...f, dueDate: e.target.value })); setShowFilterCard(false); }}
+                onChange={e => setFilters(f => ({ ...f, dueDate: e.target.value }))}
               />
             </div>
             <div className="col-auto">
               <select
                 className="form-control form-control-sm"
                 value={filters.assignedTo}
-                onChange={e => { setFilters(f => ({ ...f, assignedTo: e.target.value })); setShowFilterCard(false); }}
+                onChange={e => setFilters(f => ({ ...f, assignedTo: e.target.value }))}
               >
                 <option value="">All Assignees</option>
                 {users.map(u => (
@@ -318,11 +323,12 @@ function ListView({
         </div>
       )}
       {/* Sort Options (toggle) */}
-      {showSortOptions && (
+      {activePanel === 'sort' && (
         <div className="card mb-2 p-2" style={{ background: '#23272b', color: 'white', maxWidth: 600 }}>
           <div className="row g-2 align-items-center">
-            <div className="col-auto">
+            
               <label className="form-label mb-0 me-2">Sort by:</label>
+              <div className="col-auto">
               <select
                 className="form-control form-control-sm"
                 value={sortField}
@@ -349,6 +355,12 @@ function ListView({
               <button className="btn btn-outline-light btn-sm" onClick={() => { setSortField(""); setSortOrder("asc"); }}>Clear</button>
             </div>
           </div>
+        </div>
+      )}
+      {/* Options Panel (toggle) */}
+      {activePanel === 'options' && (
+        <div className="card mb-2 p-2" style={{ background: '#23272b', color: 'white', maxWidth: 400 }}>
+          <div>Options panel (not implemented yet)</div>
         </div>
       )}
       {/* 3. Table headers */}
