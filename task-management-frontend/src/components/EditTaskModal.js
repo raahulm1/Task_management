@@ -7,12 +7,11 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useKeycloak } from '@react-keycloak/web';
 
-function EditTaskModal({ users = [], sections = [] }) {
+function EditTaskModal({ users = [], sections = [], currentUser }) {
   const dispatch = useDispatch();
   const { keycloak } = useKeycloak();
   const editingTask = useSelector((state) => state.tasks.editingTask);
   const [task, setTask] = useState({});
-  const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [changedFields, setChangedFields] = useState({});
@@ -24,16 +23,16 @@ function EditTaskModal({ users = [], sections = [] }) {
       setTask({
         name: editingTask.name || editingTask.title || "",
         description: editingTask.description || "",
-        assignedTo: editingTask.assignedTo || editingTask.assignee || "",
+        assignedTo: editingTask.assignedTo || editingTask.assignee || currentUser?.id || "",
+        assignedBy: editingTask.assignedBy || currentUser?.id || "",
         dueDate: editingTask.dueDate ? new Date(editingTask.dueDate) : null,
         status: editingTask.status || "Todo",
         sectionId: editingTask.sectionId || "",
         priority: editingTask.priority || "",
-        // Add any other fields you want editable
       });
       setChangedFields({});
     }
-  }, [editingTask]);
+  }, [editingTask, currentUser]);
 
   // Helper to track changes
   const handleFieldChange = (field, value) => {
@@ -44,7 +43,6 @@ function EditTaskModal({ users = [], sections = [] }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!editingTask) return;
-
     setLoading(true);
     try {
       // Build updates object with only changed fields
@@ -52,7 +50,8 @@ function EditTaskModal({ users = [], sections = [] }) {
       if (changedFields.name) updates.name = task.name;
       if (changedFields.description) updates.description = task.description;
       if (changedFields.status) updates.status = task.status;
-      if (changedFields.assignedTo) updates.assignedTo = task.assignedTo;
+      if (changedFields.assignedTo) updates.assignedTo = task.assignedTo || currentUser?.id || "";
+      if (changedFields.assignedBy) updates.assignedBy = task.assignedBy || currentUser?.id || "";
       if (changedFields.dueDate) updates.dueDate = task.dueDate ? task.dueDate.toISOString().split("T")[0] : "";
       if (changedFields.sectionId) updates.sectionId = task.sectionId;
       if (changedFields.priority) updates.priority = task.priority;
@@ -99,139 +98,125 @@ function EditTaskModal({ users = [], sections = [] }) {
 
   if (!editingTask) return null;
 
+  // Helper for user display
+  const getUserDisplay = (user) => user ? `${user.name || user.email || user.id} ${user.email ? `(${user.email})` : ""}` : "Self";
+  const selfUser = currentUser ? { id: currentUser.id, name: currentUser.name || "Self", email: currentUser.email } : null;
+  const fieldRowStyle = { display: "flex", alignItems: "center", marginBottom: 12 };
+  const labelStyle = { minWidth: 120, marginRight: 8, fontWeight: 500 };
+  const inputStyle = { flex: 1, backgroundColor: "#1e1e1e", color: "white", border: "1px solid #555" };
+
   return (
     <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0, 0, 0, 0.5)" }}>
       <div className="modal-dialog modal-lg">
         <div className="modal-content bg-dark text-white">
           <div className="modal-header border-secondary">
             <h5 className="modal-title">Edit Task</h5>
-            <button
-              type="button"
-              className="btn-close btn-close-white"
-              onClick={handleClose}
-            ></button>
+            <button type="button" className="btn-close btn-close-white" onClick={handleClose}></button>
           </div>
           <form onSubmit={handleSubmit}>
             <div className="modal-body">
-                           
-
               {/* Name */}
-              <div className="mb-3">
-                <label className="form-label">Name</label>
+              <div style={fieldRowStyle}>
+                <label className="form-label" style={labelStyle}>Name<span style={{color:'red'}}>*</span>:</label>
                 <input
                   type="text"
                   value={task.name}
                   onChange={(e) => handleFieldChange("name", e.target.value)}
                   className="form-control"
                   required
-                  style={{
-                    backgroundColor: "#1e1e1e",
-                    color: "white",
-                    border: "1px solid #555",
-                  }}
+                  style={inputStyle}
                 />
               </div>
-
               {/* Description */}
-              <div className="mb-3">
-                <label className="form-label">Description</label>
-                <textarea
+              <div style={fieldRowStyle}>
+                <label className="form-label" style={labelStyle}>Description:</label>
+                <input
+                  type="text"
                   value={task.description}
                   onChange={(e) => handleFieldChange("description", e.target.value)}
                   className="form-control"
-                  required
-                  style={{
-                    backgroundColor: "#1e1e1e",
-                    color: "white",
-                    border: "1px solid #555",
-                  }}
+                  style={inputStyle}
                 />
               </div>
-
               {/* Status */}
-              <div className="mb-3">
-                <label className="form-label">Status</label>
+              <div style={fieldRowStyle}>
+                <label className="form-label" style={labelStyle}>Status:</label>
                 <select
                   value={task.status}
                   onChange={(e) => handleFieldChange("status", e.target.value)}
                   className="form-control"
-                  style={{
-                    backgroundColor: "#1e1e1e",
-                    color: "white",
-                    border: "1px solid #555",
-                  }}
+                  style={inputStyle}
                 >
                   {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status}
-                    </option>
+                    <option key={status} value={status}>{status}</option>
                   ))}
                 </select>
               </div>
-
-              {/* Assignee Dropdown */}
-              <div className="mb-3">
-                <label className="form-label">Assignee</label>
+              {/* Assigned To */}
+              <div style={fieldRowStyle}>
+                <label className="form-label" style={labelStyle}>Assigned To:</label>
                 <select
                   className="form-control"
-                  value={task.assignedTo}
+                  value={task.assignedTo || ""}
                   onChange={e => handleFieldChange("assignedTo", e.target.value)}
-                  required
+                  style={inputStyle}
                 >
-                  <option value="">Select assignee</option>
-                  {users.map(u => (
-                    <option key={u.id || u.keycloakId} value={u.id || u.keycloakId}>{u.name} ({u.email})</option>
+                  {selfUser && <option value={selfUser.id}>Self ({getUserDisplay(selfUser)})</option>}
+                  {users.filter(u => u.id !== selfUser?.id).map(u => (
+                    <option key={u.id || u.keycloakId} value={u.id || u.keycloakId}>{getUserDisplay(u)}</option>
                   ))}
                 </select>
               </div>
-
+              {/* Assigned By */}
+              <div style={fieldRowStyle}>
+                <label className="form-label" style={labelStyle}>Assigned By:</label>
+                <select
+                  className="form-control"
+                  value={task.assignedBy || ""}
+                  onChange={e => handleFieldChange("assignedBy", e.target.value)}
+                  style={inputStyle}
+                >
+                  {selfUser && <option value={selfUser.id}>Self ({getUserDisplay(selfUser)})</option>}
+                  {users.filter(u => u.id !== selfUser?.id).map(u => (
+                    <option key={u.id || u.keycloakId} value={u.id || u.keycloakId}>{getUserDisplay(u)}</option>
+                  ))}
+                </select>
+              </div>
               {/* Due Date */}
-              <div className="mb-3 position-relative">
-                <div className="d-flex align-items-center justify-content-between">
-                  <label className="form-label mb-0">Due Date</label>
-                  <FaChevronDown
-                    style={{
-                      cursor: "pointer",
-                      transform: showDatePicker ? "rotate(180deg)" : "rotate(0deg)",
-                      transition: "transform 0.2s ease",
-                    }}
+              <div style={fieldRowStyle}>
+                <label className="form-label" style={labelStyle}>Due Date:</label>
+                <div style={{ flex: 1, position: "relative" }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value={task.dueDate ? task.dueDate.toISOString().split("T")[0] : ""}
+                    className="form-control"
+                    style={{ ...inputStyle, cursor: "pointer" }}
                     onClick={() => setShowDatePicker((prev) => !prev)}
                   />
+                  {showDatePicker && (
+                    <div style={{ position: "absolute", zIndex: 10, top: 38 }}>
+                      <DatePicker
+                        selected={task.dueDate}
+                        onChange={(date) => {
+                          handleFieldChange("dueDate", date);
+                          setShowDatePicker(false);
+                        }}
+                        inline
+                      />
+                    </div>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  readOnly
-                  value={task.dueDate ? task.dueDate.toISOString().split("T")[0] : ""}
-                  className="form-control mt-1"
-                  style={{
-                    backgroundColor: "#1e1e1e",
-                    color: "white",
-                    border: "1px solid #555",
-                  }}
-                />
-                {showDatePicker && (
-                  <div className="position-absolute mt-2 z-3">
-                    <DatePicker
-                      selected={task.dueDate}
-                      onChange={(date) => {
-                        handleFieldChange("dueDate", date);
-                        setShowDatePicker(false);
-                      }}
-                      inline
-                    />
-                  </div>
-                )}
               </div>
-
-              {/* Section Dropdown */}
+              {/* Section */}
               {sections && sections.length > 0 && (
-                <div className="mb-3">
-                  <label className="form-label">Section</label>
+                <div style={fieldRowStyle}>
+                  <label className="form-label" style={labelStyle}>Section:</label>
                   <select
                     className="form-control"
                     value={task.sectionId}
                     onChange={e => handleFieldChange("sectionId", e.target.value)}
-                    required
+                    style={inputStyle}
                   >
                     {sections.map(s => (
                       <option key={s.id} value={s.id}>{s.name}</option>
@@ -239,14 +224,14 @@ function EditTaskModal({ users = [], sections = [] }) {
                   </select>
                 </div>
               )}
-
               {/* Priority */}
-              <div className="mb-3">
-                <label className="form-label">Priority</label>
+              <div style={fieldRowStyle}>
+                <label className="form-label" style={labelStyle}>Priority:</label>
                 <select
                   className="form-control"
                   value={task.priority}
                   onChange={e => handleFieldChange("priority", e.target.value)}
+                  style={inputStyle}
                 >
                   <option value="">Select priority</option>
                   <option value="High">High</option>
@@ -254,35 +239,11 @@ function EditTaskModal({ users = [], sections = [] }) {
                   <option value="Low">Low</option>
                 </select>
               </div>
-
-              {/* Add more fields as needed */}
-
             </div>
-
             <div className="modal-footer border-secondary">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={handleClose}
-                disabled={loading}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={loading}
-              >
-                {loading ? "Updating..." : "Update Task"}
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={handleDelete}
-                disabled={loading}
-              >
-                Delete
-              </button>
+              <button type="button" className="btn btn-secondary" onClick={handleClose} disabled={loading}>Cancel</button>
+              <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? "Updating..." : "Update Task"}</button>
+              <button type="button" className="btn btn-danger" onClick={handleDelete} disabled={loading}>Delete</button>
             </div>
           </form>
         </div>

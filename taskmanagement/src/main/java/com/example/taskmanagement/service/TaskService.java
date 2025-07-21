@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat;
 @Service
 public class TaskService {
     @Autowired
-    private TaskRepository taskRepository;
+    public TaskRepository taskRepository;
 
     public List<Task> getTasksForProject(String projectId) {
         return taskRepository.findByProjectId(projectId);
@@ -22,13 +22,28 @@ public class TaskService {
         return taskRepository.findBySectionId(sectionId);
     }
 
+    public List<Task> getTasksForUser(String userId) {
+        return taskRepository.findByAssignedTo(userId);
+    }
+
     public Task addTask(Task task) {
-        return taskRepository.save(task);
+        Task savedTask = taskRepository.save(task);
+        // If this is a subtask, update parent
+        if (savedTask.getParentTaskId() != null) {
+            Task parent = taskRepository.findById(savedTask.getParentTaskId()).orElse(null);
+            if (parent != null) {
+                List<String> subtaskIds = parent.getSubtaskIds();
+                if (subtaskIds == null) subtaskIds = new java.util.ArrayList<>();
+                subtaskIds.add(savedTask.getId());
+                parent.setSubtaskIds(subtaskIds);
+                taskRepository.save(parent);
+            }
+        }
+        return savedTask;
     }
 
     public Task updateTask(String id, Task task) {
         Task existing = taskRepository.findById(id).orElseThrow();
-        
         // Only update fields that are not null to preserve existing data
         if (task.getName() != null) {
             existing.setName(task.getName());
@@ -54,10 +69,12 @@ public class TaskService {
         if (task.getSectionId() != null) {
             existing.setSectionId(task.getSectionId());
         }
-        if (task.getSubtasks() != null) {
-            existing.setSubtasks(task.getSubtasks());
+        if (task.getSubtaskIds() != null) {
+            existing.setSubtaskIds(task.getSubtaskIds());
         }
-        
+        if (task.getParentTaskId() != null) {
+            existing.setParentTaskId(task.getParentTaskId());
+        }
         return taskRepository.save(existing);
     }
 
@@ -97,22 +114,29 @@ public class TaskService {
         if (updates.containsKey("sectionId")) {
             existing.setSectionId((String) updates.get("sectionId"));
         }
-        if (updates.containsKey("subtasks")) {
-            Object subtasksObj = updates.get("subtasks");
-            if (subtasksObj instanceof List<?>) {
+        if (updates.containsKey("subtaskIds")) {
+            Object subtaskIdsObj = updates.get("subtaskIds");
+            if (subtaskIdsObj instanceof List<?>) {
                 try {
                     @SuppressWarnings("unchecked")
-                    List<Task> subtasks = (List<Task>) subtasksObj;
-                    existing.setSubtasks(subtasks);
+                    List<String> subtaskIds = (List<String>) subtaskIdsObj;
+                    existing.setSubtaskIds(subtaskIds);
                 } catch (ClassCastException e) {
-                    throw new RuntimeException("Invalid type for subtasks", e);
+                    throw new RuntimeException("Invalid type for subtaskIds", e);
                 }
             }
+        }
+        if (updates.containsKey("parentTaskId")) {
+            existing.setParentTaskId((String) updates.get("parentTaskId"));
         }
         return taskRepository.save(existing);
     }
 
     public void deleteTask(String id) {
         taskRepository.deleteById(id);
+    }
+
+    public List<Task> getSubtasks(String parentTaskId) {
+        return taskRepository.findByParentTaskId(parentTaskId);
     }
 }

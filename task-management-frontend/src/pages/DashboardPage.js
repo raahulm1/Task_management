@@ -21,10 +21,6 @@ function DashboardPage() {
     { id: 8, title: "Check analytics dashboard", dueDate: "2025-07-14", status: "Upcoming" },
   ];
 
-  useEffect(() => {
-    dispatch(fetchProjects());
-  }, [dispatch]);
-
   const today = new Date();
 
   const filteredTasks = tasks.filter((task) => {

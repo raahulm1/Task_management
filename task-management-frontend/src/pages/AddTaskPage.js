@@ -75,6 +75,7 @@ function AddTaskPage() {
             onAdd={handleAddTask}
             onClose={() => navigate(`/project/${id}`)}
             onSectionCreated={refreshSections}
+            currentUser={keycloak?.tokenParsed ? { id: keycloak.tokenParsed.sub, name: keycloak.tokenParsed.name, email: keycloak.tokenParsed.email } : null}
           />
         </div>
       </div>

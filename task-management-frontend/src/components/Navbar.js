@@ -8,8 +8,9 @@ function Navbar({ keycloak }) {
   const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const handleLogout = () => {
-    keycloak.logout(); // 🔐 Use Keycloak logout
+ const handleLogout = () => {
+    localStorage.removeItem("token");
+    keycloak.logout({ redirectUri: window.location.origin + '/' });
   };
 
   const toggleDropdown = () => {

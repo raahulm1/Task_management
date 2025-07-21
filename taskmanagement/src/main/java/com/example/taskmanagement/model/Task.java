@@ -18,7 +18,8 @@ public class Task {
     private String assignedBy; // user Keycloak ID
     private Date dueDate;
     private String status; // To Do, In Progress, Completed
-    private List<Task> subtasks; // Recursive subtasks
+    private List<String> subtaskIds; // List of subtask IDs
+    private String parentTaskId; // Parent task ID (null for top-level tasks)
     private String createdBy;
     private Date createdAt;
     private Date updatedAt;
@@ -44,8 +45,10 @@ public class Task {
     public void setDueDate(Date dueDate) { this.dueDate = dueDate; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
-    public List<Task> getSubtasks() { return subtasks; }
-    public void setSubtasks(List<Task> subtasks) { this.subtasks = subtasks; }
+    public List<String> getSubtaskIds() { return subtaskIds; }
+    public void setSubtaskIds(List<String> subtaskIds) { this.subtaskIds = subtaskIds; }
+    public String getParentTaskId() { return parentTaskId; }
+    public void setParentTaskId(String parentTaskId) { this.parentTaskId = parentTaskId; }
     public String getCreatedBy() { return createdBy; }
     public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
     public Date getCreatedAt() { return createdAt; }

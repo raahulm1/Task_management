@@ -2,10 +2,13 @@
   "dependencies": {
     "@react-keycloak/web": "^3.4.0",
     "axios": "^1.10.0",
+    "bootstrap": "^5.3.7",
     "keycloak-js": "^26.2.0",
     "react-beautiful-dnd": "^13.1.1",
+    "react-bootstrap": "^2.10.10",
     "react-datepicker": "^8.4.0",
     "react-router-dom": "^7.6.3",
+    "react-toastify": "^11.0.5",
     "stream-http": "^3.2.0"
   }
 }

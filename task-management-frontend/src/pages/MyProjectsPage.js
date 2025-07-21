@@ -19,29 +19,40 @@ function MyProjectsPage() {
   }, [dispatch, keycloak]);
 
   return (
-    <div className="d-flex min-vh-100" style={{ background: "#2c2c2c" }}>
+    <div className="d-flex min-vh-100" style={{ backgroundColor: "#1e1e1e" }}>
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={projects} loading={loading} error={error} />
-      <div className="flex-grow-1 p-4 text-white">
-        <h4 className="mb-4">My Projects</h4>
-        <div className="p-4 rounded shadow-sm" style={{ backgroundColor: "#2a2a2a", maxWidth: "700px", margin: "0 auto" }}>
-          <h4 className="text-center mb-4">👤My Projects</h4>
+      <div className="flex-grow-1 p-4 text-white" style={{ backgroundColor: "#252525", fontFamily: "Segoe UI, sans-serif" }}>
+        
+        {/* Projects Section */}
+        <div className="p-4 rounded shadow-sm position-relative" style={{ maxWidth: "900px", margin: "0 auto", border: "1px solid #444", backgroundColor: "#2f2f2f" }}>
+          <div className="d-flex align-items-center gap-2 mb-3">
+            <i className="bi bi-kanban" style={{ fontSize: "20px", color: "#ccc" }}></i>
+            <h5 className="fw-semibold mb-0">My Projects</h5>
+          </div>
           {loading ? (
-            <p className="text-center text-white">Loading projects...</p>
+            <p className="text-secondary mt-4">Loading projects...</p>
           ) : error ? (
-            <p className="text-center text-danger">{error}</p>
+            <p className="text-danger mt-4">{error}</p>
+          ) : projects.length === 0 ? (
+            <p className="text-secondary mt-4">No projects found.</p>
           ) : (
-            <ul className="list-group">
-              {projects.length === 0 ? (
-                <li className="list-group-item bg-dark text-white text-center border-0">No projects found.</li>
-              ) : (
-                projects.map((proj) => (
-                  <li key={proj.id} className="list-group-item d-flex justify-content-between align-items-center bg-dark text-white border-secondary">
-                    {proj.name}
-                    <button onClick={() => navigate(`/project/${proj.id}`)} className="btn btn-sm btn-outline-primary">View</button>
-                  </li>
-                ))
-              )}
-            </ul>
+            projects.map((proj) => (
+              <div
+                key={proj.id}
+                className="d-flex justify-content-between align-items-center py-3"
+                style={{ borderBottom: "0.5px solid #4c4c4c" }}
+              >
+                <span
+                  className="fw-medium"
+                  style={{ cursor: "pointer", textDecoration: "underline dotted transparent" }}
+                  onClick={() => navigate(`/project/${proj.id}`)}
+                  onMouseOver={e => e.currentTarget.style.textDecoration = 'underline'}
+                  onMouseOut={e => e.currentTarget.style.textDecoration = 'underline dotted transparent'}
+                >
+                  {proj.name}
+                </span>
+              </div>
+            ))
           )}
         </div>
       </div>

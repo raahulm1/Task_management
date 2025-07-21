@@ -4,11 +4,12 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { createSection } from "../api/sections";
 
-function TaskForm({ onAdd, onClose, sections = [], users = [], token, projectId, onSectionCreated }) {
+function TaskForm({ onAdd, onClose, sections = [], users = [], token, projectId, onSectionCreated, currentUser }) {
   const [task, setTask] = useState({
-    title: "",
+    name: "",
     description: "",
-    assignedTo: "",
+    assignedTo: currentUser?.id || "",
+    assignedBy: currentUser?.id || "",
     dueDate: null,
     status: "Todo",
     sectionId: sections && sections.length > 0 ? sections[0].id : "",
@@ -25,6 +26,15 @@ function TaskForm({ onAdd, onClose, sections = [], users = [], token, projectId,
     setSectionOptions([...sections]);
     // eslint-disable-next-line
   }, [JSON.stringify(sections)]);
+
+  // If currentUser changes, update defaults
+  useEffect(() => {
+    setTask((prev) => ({
+      ...prev,
+      assignedTo: prev.assignedTo || currentUser?.id || "",
+      assignedBy: prev.assignedBy || currentUser?.id || ""
+    }));
+  }, [currentUser]);
 
   const handleFieldChange = (field, value) => {
     setTask((prev) => ({ ...prev, [field]: value }));
@@ -54,127 +64,129 @@ function TaskForm({ onAdd, onClose, sections = [], users = [], token, projectId,
   const handleSubmit = (e) => {
     e.preventDefault();
     if (sectionOptions && sectionOptions.length > 0 && !task.sectionId) return;
+    if (!task.name) return; // Enforce name
+    // Default assignedTo/assignedBy to self if blank
+    const assignedTo = task.assignedTo || currentUser?.id || "";
+    const assignedBy = task.assignedBy || currentUser?.id || "";
     onAdd({
       ...task,
+      assignedTo,
+      assignedBy,
       dueDate: task.dueDate ? task.dueDate.toISOString().split("T")[0] : "",
       sectionId: task.sectionId,
     });
   };
 
+  // Helper for user display
+  const getUserDisplay = (user) => user ? `${user.name || user.email || user.id} ${user.email ? `(${user.email})` : ""}` : "Self";
+
+  // Find self user object for dropdown
+  const selfUser = currentUser ? { id: currentUser.id, name: currentUser.name || "Self", email: currentUser.email } : null;
+
+  // Compact horizontal field style
+  const fieldRowStyle = { display: "flex", alignItems: "center", marginBottom: 12 };
+  const labelStyle = { minWidth: 120, marginRight: 8, fontWeight: 500 };
+  const inputStyle = { flex: 1, backgroundColor: "#1e1e1e", color: "white", border: "1px solid #555" };
+
   return (
-    <form onSubmit={handleSubmit}>
-      <div className="p-4 rounded" style={{ backgroundColor: "#343a40", color: "white" }}>
-        {/* Title */}
-        <div className="mb-3">
-          <label className="form-label">Title</label>
+    <form onSubmit={handleSubmit} style={{ maxWidth: 500, margin: "0 auto" }}>
+      <div className="p-3 rounded" style={{ backgroundColor: "#343a40", color: "white" }}>
+        {/* Name */}
+        <div style={fieldRowStyle}>
+          <label className="form-label" style={labelStyle}>Name<span style={{color:'red'}}>*</span>:</label>
           <input
             type="text"
-            value={task.title}
-            onChange={(e) => handleFieldChange("title", e.target.value)}
+            value={task.name}
+            onChange={(e) => handleFieldChange("name", e.target.value)}
             className="form-control"
             required
-            style={{
-              backgroundColor: "#1e1e1e",
-              color: "white",
-              border: "1px solid #555",
-            }}
+            style={inputStyle}
           />
         </div>
-
         {/* Description */}
-        <div className="mb-3">
-          <label className="form-label">Description</label>
-          <textarea
+        <div style={fieldRowStyle}>
+          <label className="form-label" style={labelStyle}>Description:</label>
+          <input
+            type="text"
             value={task.description}
             onChange={(e) => handleFieldChange("description", e.target.value)}
             className="form-control"
-            required
-            style={{
-              backgroundColor: "#1e1e1e",
-              color: "white",
-              border: "1px solid #555",
-            }}
+            style={inputStyle}
           />
         </div>
-
         {/* Status */}
-        <div className="mb-3">
-          <label className="form-label">Status</label>
+        <div style={fieldRowStyle}>
+          <label className="form-label" style={labelStyle}>Status:</label>
           <select
             value={task.status}
             onChange={(e) => handleFieldChange("status", e.target.value)}
             className="form-control"
-            style={{
-              backgroundColor: "#1e1e1e",
-              color: "white",
-              border: "1px solid #555",
-            }}
+            style={inputStyle}
           >
             {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
+              <option key={status} value={status}>{status}</option>
             ))}
           </select>
         </div>
-
-        {/* Assignee Dropdown */}
-        <div className="mb-3">
-          <label className="form-label">Assignee</label>
+        {/* Assigned To */}
+        <div style={fieldRowStyle}>
+          <label className="form-label" style={labelStyle}>Assigned To:</label>
           <select
             className="form-control"
-            value={task.assignedTo}
+            value={task.assignedTo || ""}
             onChange={e => handleFieldChange("assignedTo", e.target.value)}
-            required
+            style={inputStyle}
           >
-            <option value="">Select assignee</option>
-            {users.map(u => (
-              <option key={u.id || u.keycloakId} value={u.id || u.keycloakId}>{u.name} ({u.email})</option>
+            {selfUser && <option value={selfUser.id}>Self ({getUserDisplay(selfUser)})</option>}
+            {users.filter(u => u.id !== selfUser?.id).map(u => (
+              <option key={u.id || u.keycloakId} value={u.id || u.keycloakId}>{getUserDisplay(u)}</option>
             ))}
           </select>
         </div>
-
+        {/* Assigned By */}
+        <div style={fieldRowStyle}>
+          <label className="form-label" style={labelStyle}>Assigned By:</label>
+          <select
+            className="form-control"
+            value={task.assignedBy || ""}
+            onChange={e => handleFieldChange("assignedBy", e.target.value)}
+            style={inputStyle}
+          >
+            {selfUser && <option value={selfUser.id}>Self ({getUserDisplay(selfUser)})</option>}
+            {users.filter(u => u.id !== selfUser?.id).map(u => (
+              <option key={u.id || u.keycloakId} value={u.id || u.keycloakId}>{getUserDisplay(u)}</option>
+            ))}
+          </select>
+        </div>
         {/* Due Date */}
-        <div className="mb-3 position-relative">
-          <div className="d-flex align-items-center justify-content-between">
-            <label className="form-label mb-0">Due Date</label>
-            <FaChevronDown
-              style={{
-                cursor: "pointer",
-                transform: showDatePicker ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.2s ease",
-              }}
+        <div style={fieldRowStyle}>
+          <label className="form-label" style={labelStyle}>Due Date:</label>
+          <div style={{ flex: 1, position: "relative" }}>
+            <input
+              type="text"
+              readOnly
+              value={task.dueDate ? task.dueDate.toISOString().split("T")[0] : ""}
+              className="form-control"
+              style={{ ...inputStyle, cursor: "pointer" }}
               onClick={() => setShowDatePicker((prev) => !prev)}
             />
+            {showDatePicker && (
+              <div style={{ position: "absolute", zIndex: 10, top: 38 }}>
+                <DatePicker
+                  selected={task.dueDate}
+                  onChange={(date) => {
+                    handleFieldChange("dueDate", date);
+                    setShowDatePicker(false);
+                  }}
+                  inline
+                />
+              </div>
+            )}
           </div>
-          <input
-            type="text"
-            readOnly
-            value={task.dueDate ? task.dueDate.toISOString().split("T")[0] : ""}
-            className="form-control mt-1"
-            style={{
-              backgroundColor: "#1e1e1e",
-              color: "white",
-              border: "1px solid #555",
-            }}
-          />
-          {showDatePicker && (
-            <div className="position-absolute mt-2 z-3">
-              <DatePicker
-                selected={task.dueDate}
-                onChange={(date) => {
-                  handleFieldChange("dueDate", date);
-                  setShowDatePicker(false);
-                }}
-                inline
-              />
-            </div>
-          )}
         </div>
-
-        {/* Section Dropdown with add new */}
-        <div className="mb-3">
-          <label className="form-label">Section</label>
+        {/* Section */}
+        <div style={fieldRowStyle}>
+          <label className="form-label" style={labelStyle}>Section:</label>
           <input
             className="form-control mb-2"
             type="text"
@@ -182,28 +194,28 @@ function TaskForm({ onAdd, onClose, sections = [], users = [], token, projectId,
             value={task.newSectionName || sectionOptions.find(s => s.id === task.sectionId)?.name || ""}
             onChange={handleSectionInput}
             list="section-list"
+            style={inputStyle}
           />
           <datalist id="section-list">
             {sectionOptions.map(s => (
               <option key={s.id} value={s.name} />
             ))}
           </datalist>
-          {/* If typed section doesn't exist, show create button */}
           {task.newSectionName && !sectionOptions.some(s => s.name === task.newSectionName) && (
-            <button type="button" className="btn btn-sm btn-outline-primary mt-2" onClick={handleCreateSection} disabled={sectionLoading}>
+            <button type="button" className="btn btn-sm btn-outline-primary ms-2" onClick={handleCreateSection} disabled={sectionLoading}>
               {sectionLoading ? "Creating..." : `Create section "${task.newSectionName}"`}
             </button>
           )}
           {sectionError && <div className="text-danger mt-1">{sectionError}</div>}
         </div>
-
         {/* Priority */}
-        <div className="mb-3">
-          <label className="form-label">Priority</label>
+        <div style={fieldRowStyle}>
+          <label className="form-label" style={labelStyle}>Priority:</label>
           <select
             className="form-control"
             value={task.priority}
             onChange={e => handleFieldChange("priority", e.target.value)}
+            style={inputStyle}
           >
             <option value="">Select priority</option>
             <option value="High">High</option>
@@ -211,9 +223,8 @@ function TaskForm({ onAdd, onClose, sections = [], users = [], token, projectId,
             <option value="Low">Low</option>
           </select>
         </div>
-
         {/* Buttons */}
-        <div className="mb-3 text-end">
+        <div className="text-end mt-3">
           <button type="submit" className="btn btn-primary me-2" disabled={sectionOptions && sectionOptions.length > 0 && !task.sectionId}>
             Add
           </button>

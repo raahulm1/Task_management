@@ -64,3 +64,24 @@ export async function patchTask(id, updates, token) {
   if (!response.ok) throw new Error('Failed to patch task');
   return response.json();
 }
+
+export async function getTaskWithSubtasks(id, token) {
+  const response = await fetch(`${API_URL}/task/${id}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) throw new Error('Failed to fetch task with subtasks');
+  return response.json();
+}
+
+export async function getTasksForUser(userId, token) {
+  const response = await fetch(`${API_URL}/user/${userId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) throw new Error('Failed to fetch user tasks');
+  const data = await response.json();
+  return Array.isArray(data) ? data.map(task => ({ ...task, id: task.id || task._id })) : data;
+}

@@ -26,11 +26,6 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
     }
   }, [openModal, keycloak]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    keycloak.logout({ redirectUri: window.location.origin + '/' });
-  };
-
   const renderModal = () => {
     if (!openModal) return null;
     let title = '';
@@ -42,7 +37,7 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         break;
       case 'task':
         title = 'Create Task';
-        body = <TaskForm users={users} sections={sections} onAdd={() => setOpenModal(null)} onClose={() => setOpenModal(null)} />;
+        body = <TaskForm users={users} sections={sections} onAdd={() => setOpenModal(null)} onClose={() => setOpenModal(null)} currentUser={keycloak?.tokenParsed ? { id: keycloak.tokenParsed.sub, name: keycloak.tokenParsed.name, email: keycloak.tokenParsed.email } : null} />;
         break;
       case 'team':
         title = 'Create Team';
@@ -187,11 +182,11 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         >
           <i className={`bi ${collapsed ? "bi-arrow-right" : "bi-arrow-left"}`}></i>
         </button>
-        {!collapsed && (
+        {/*{!collapsed && (
           <span className="fw-bold" style={{ fontSize: "1.1rem" }}>
             CMart
           </span>
-        )}
+        )}*/}
       </div>
 
       {/* Create Button */}
@@ -215,13 +210,13 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
             >
               <i className="bi bi-kanban me-2"></i> Create Project
             </div>
-            <div
+            {/*<div
               className="p-2 text-white d-flex align-items-center"
               style={{ cursor: "pointer" }}
               onClick={() => { setOpenModal('task'); setShowCreateDropdown(false); }}
             >
               <i className="bi bi-card-checklist me-2"></i> Create Task
-            </div>
+            </div>*/}
             <div
               className="p-2 text-white d-flex align-items-center"
               style={{ cursor: "pointer" }}
@@ -292,15 +287,7 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         </ul>
       )}
 
-      {/* Logout */}
-      <button
-        className={`btn btn-danger mt-2 ${collapsed ? "mx-auto" : ""}`}
-        onClick={handleLogout}
-      >
-        <i className="bi bi-box-arrow-right"></i>
-        {!collapsed && <span className="ms-2">Logout</span>}
-      </button>
-
+      
       {renderModal()}
     </div>
   );

@@ -24,7 +24,7 @@ function ProjectPage() {
   const { list: projects, loading: projectsLoading, error: projectsError } = useSelector((state) => state.projects);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [projectName, setProjectName] = useState("");
-  const [activeView, setActiveView] = useState("list"); // Default to board view
+  const [activeView, setActiveView] = useState("list"); // Default to list view
   const [collapsed, setCollapsed] = useState(false);
   const [sections, setSections] = useState([]);
   const [users, setUsers] = useState([]);

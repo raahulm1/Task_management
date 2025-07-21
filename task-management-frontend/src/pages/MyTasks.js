@@ -2,35 +2,47 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Sidebar from "../components/Sidebar";
 import { fetchProjects } from "../features/projects/projectsSlice";
+import { useKeycloak } from '@react-keycloak/web';
+import { getTasksForUser } from '../api/tasks';
+import TaskDetailsModal from '../components/TaskDetailsModal';
 
 function MyTasks() {
   const dispatch = useDispatch();
-  const { list: projects, loading, error } = useSelector((state) => state.projects);
+  const { keycloak } = useKeycloak();
+  const { list: projects, loading: projectsLoading, error: projectsError } = useSelector((state) => state.projects);
   const [collapsed, setCollapsed] = useState(false);
   const [tab, setTab] = useState("Upcoming");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const tasks = [
-    { id: 1, title: "Prepare Q3 financial report", dueDate: "2025-07-16", status: "Upcoming" },
-    { id: 2, title: "UI review for onboarding flow", dueDate: "2025-07-17", status: "Upcoming" },
-    { id: 3, title: "Client feedback session", dueDate: "2025-07-19", status: "Upcoming" },
-    { id: 4, title: "Fix production bug #2345", dueDate: "2025-07-10", status: "Overdue" },
-    { id: 5, title: "Submit final proposal to sales", dueDate: "2025-07-12", status: "Overdue" },
-    { id: 6, title: "Review team goals", dueDate: "2025-07-06", status: "Completed" },
-    { id: 7, title: "Send thank you email to client", dueDate: "2025-07-05", status: "Completed" },
-    { id: 8, title: "Check analytics dashboard", dueDate: "2025-07-14", status: "Upcoming" },
-  ];
 
   useEffect(() => {
-    dispatch(fetchProjects());
-  }, [dispatch]);
+    const fetchTasks = async () => {
+      if (!keycloak?.tokenParsed?.sub || !keycloak?.token) return;
+      setLoading(true);
+      setError("");
+      try {
+        const data = await getTasksForUser(keycloak.tokenParsed.sub, keycloak.token);
+        setTasks(data);
+      } catch (err) {
+        setError("Failed to fetch tasks");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTasks();
+  }, [keycloak]);
 
   const today = new Date();
   const filteredTasks = tasks.filter((task) => {
     const due = new Date(task.dueDate);
-    if (tab === "Upcoming") return due > today && task.status === "Upcoming";
-    if (tab === "Overdue") return due < today && task.status === "Overdue";
-    if (tab === "Completed") return task.status === "Completed";
+    if (tab === "Upcoming") return due > today && task.status !== 'Completed';
+    if (tab === "Overdue") return due < today && task.status !== 'Completed';
+    if (tab === "Completed") return task.status === 'Completed';
     return true;
   });
 
@@ -41,13 +53,13 @@ function MyTasks() {
 
   return (
     <div className="d-flex min-vh-100" style={{ backgroundColor: "#1e1e1e" }}>
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={projects} loading={loading} error={error} />
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} projects={projects} loading={projectsLoading} error={projectsError} />
 
       <div className="flex-grow-1 p-4 text-white" style={{ backgroundColor: "#252525", fontFamily: "Segoe UI, sans-serif" }}>
-        {/* Top Heading */}
+        {/* Top Heading 
         <div className="mb-4">
           <h6 style={{ fontSize: "20px", letterSpacing: "1px" }}>Tasks</h6>
-        </div>
+        </div>  */}
 
         {/* My Tasks Section */}
         <div className="p-4 rounded shadow-sm position-relative" style={{ maxWidth: "900px", margin: "0 auto", border: "1px solid #444", backgroundColor: "#2f2f2f" }}>
@@ -56,6 +68,7 @@ function MyTasks() {
               <i className="bi bi-person-circle" style={{ fontSize: "20px", color: "#ccc" }}></i>
               <h5 className="fw-semibold mb-0">My Tasks</h5>
             </div>
+            {/*
             <div className="position-relative">
               <i
                 className="bi bi-three-dots-vertical text-light"
@@ -69,7 +82,7 @@ function MyTasks() {
                   <div className="dropdown-item text-white py-1 px-2" style={{ cursor: "pointer" }} onClick={() => handleAction("Mark as Done")}>✅ Mark as Done</div>
                 </div>
               )}
-            </div>
+            </div>*/}
           </div>
 
           {/* Tabs */}
@@ -91,20 +104,40 @@ function MyTasks() {
           </div>
 
           {/* Task List */}
-          {filteredTasks.length === 0 ? (
+          {loading ? (
+            <p className="text-secondary mt-4">Loading tasks...</p>
+          ) : error ? (
+            <p className="text-danger mt-4">{error}</p>
+          ) : filteredTasks.length === 0 ? (
             <p className="text-secondary mt-4">No {tab.toLowerCase()} tasks found.</p>
           ) : (
             filteredTasks.map((task) => (
-              <div key={task.id} className="d-flex justify-content-between align-items-center py-3" style={{ borderBottom: "0.5px solid #4c4c4c" }}>
-                <span className="fw-medium">{task.title}</span>
+              <div
+                key={task.id}
+                className="d-flex justify-content-between align-items-center py-3"
+                style={{ borderBottom: "0.5px solid #4c4c4c", cursor: "pointer" }}
+                onClick={() => {
+                  setSelectedTask(task);
+                  setShowModal(true);
+                }}
+              >
+                <span className="fw-medium">{task.name || task.title}</span>
                 <small className="text-white" style={{ fontSize: "13px" }}>
-                  {new Date(task.dueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                  {task.dueDate ? new Date(task.dueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : ''}
                 </small>
               </div>
             ))
           )}
         </div>
       </div>
+      {/* Task Modal */}
+      {showModal && selectedTask && (
+        <TaskDetailsModal
+          task={selectedTask}
+          onClose={() => setShowModal(false)}
+          users={keycloak?.tokenParsed ? [{ id: keycloak.tokenParsed.sub, name: keycloak.tokenParsed.name, email: keycloak.tokenParsed.email }] : []}
+        />
+      )}
     </div>
   );
 }

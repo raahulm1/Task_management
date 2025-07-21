@@ -9,4 +9,6 @@ import java.util.List;
 public interface TaskRepository extends MongoRepository<Task, String> {
     List<Task> findByProjectId(String projectId);
     List<Task> findBySectionId(String sectionId);
+    List<Task> findByParentTaskId(String parentTaskId);
+    List<Task> findByAssignedTo(String assignedTo);
 }
