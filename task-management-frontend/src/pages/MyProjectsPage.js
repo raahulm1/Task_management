@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchProjects } from "../features/projects/projectsSlice";
 import Sidebar from "../components/Sidebar";
 import { useKeycloak } from '@react-keycloak/web';
+import { toast } from 'react-toastify';
+import { deleteProject } from '../api/projects';
 
 function MyProjectsPage() {
   const dispatch = useDispatch();
@@ -11,6 +13,22 @@ function MyProjectsPage() {
   const { keycloak } = useKeycloak();
   const { list: projects, loading, error } = useSelector((state) => state.projects);
   const [collapsed, setCollapsed] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [menuOpenId, setMenuOpenId] = useState(null);
+
+  const handleDeleteProject = async (projectId) => {
+    setDeletingId(projectId);
+    try {
+      await deleteProject(projectId, keycloak.token);
+      toast.success('Project deleted successfully');
+      dispatch(fetchProjects(keycloak.token));
+    } catch (err) {
+      toast.error('Failed to delete project');
+    } finally {
+      setDeletingId(null);
+      setMenuOpenId(null);
+    }
+  };
 
   useEffect(() => {
     if (keycloak.authenticated) {
@@ -51,6 +69,27 @@ function MyProjectsPage() {
                 >
                   {proj.name}
                 </span>
+                <div style={{ position: 'relative' }}>
+                  <button
+                    className="btn btn-link text-white p-0 ms-2"
+                    style={{ fontSize: 22, lineHeight: 1, background: 'none', border: 'none' }}
+                    onClick={() => setMenuOpenId(menuOpenId === proj.id ? null : proj.id)}
+                  >
+                    <i className="bi bi-three-dots-vertical"></i>
+                  </button>
+                  {menuOpenId === proj.id && (
+                    <div style={{ position: 'absolute', right: 0, top: 28, background: '#222', border: '1px solid #444', borderRadius: 6, zIndex: 10, minWidth: 120 }}>
+                      <button
+                        className="dropdown-item text-danger"
+                        style={{ background: 'none', color: '#ff4d4f', border: 'none', width: '100%', textAlign: 'left', padding: '8px 16px', fontSize: 15, cursor: deletingId === proj.id ? 'not-allowed' : 'pointer' }}
+                        onClick={() => handleDeleteProject(proj.id)}
+                        disabled={deletingId === proj.id}
+                      >
+                        {deletingId === proj.id ? 'Deleting...' : 'Delete'}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))
           )}

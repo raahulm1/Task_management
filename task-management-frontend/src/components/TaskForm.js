@@ -78,7 +78,7 @@ function TaskForm({ onAdd, onClose, sections = [], users = [], token, projectId,
   };
 
   // Helper for user display
-  const getUserDisplay = (user) => user ? `${user.name || user.email || user.id} ${user.email ? `(${user.email})` : ""}` : "Self";
+  const getUserDisplay = (user) => user ? `${user.name || user.email || user.id} ` : "Self";
 
   // Find self user object for dropdown
   const selfUser = currentUser ? { id: currentUser.id, name: currentUser.name || "Self", email: currentUser.email } : null;

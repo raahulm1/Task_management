@@ -7,6 +7,8 @@ import { createTeam } from "../api/teams";
 import { getUsers } from "../api/users";
 import { getTeams } from "../api/teams";
 import { useKeycloak } from '@react-keycloak/web';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showProjects = true, sections = [] }) {
   const navigate = useNavigate();
@@ -78,11 +80,12 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
       setLoading(true);
       try {
         await createProject({ name, teamId: team, userIds: selectedUsers }, keycloak.token);
-        alert("Project created!");
+        toast.success("Project created!");
         setOpenModal(null);
         window.location.reload();
       } catch (err) {
         setError("Failed to create project");
+        toast.error("Failed to create project");
       } finally {
         setLoading(false);
       }
@@ -101,12 +104,12 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
             {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         </div>
-        <div className="mb-3">
+        {/*<div className="mb-3">
           <label className="form-label">Users</label>
           <select className="form-select" multiple value={selectedUsers} onChange={e => setSelectedUsers(Array.from(e.target.selectedOptions, o => o.value))}>
             {users.map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
           </select>
-        </div>
+        </div>*/}
         {error && <div className="alert alert-danger py-1">{error}</div>}
         <div className="text-end">
           <button type="button" className="btn btn-secondary me-2" onClick={onClose}>Cancel</button>
@@ -132,11 +135,12 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
       setLoading(true);
       try {
         await createTeam({ name, members }, keycloak.token);
-        alert("Team created!");
+        toast.success("Team created!");
         setOpenModal(null);
         window.location.reload();
       } catch (err) {
         setError("Failed to create team");
+        toast.error("Failed to create team");
       } finally {
         setLoading(false);
       }
@@ -174,6 +178,8 @@ function Sidebar({ collapsed, setCollapsed, projects = [], loading, error, showP
         overflowY: "auto",
       }}
     >
+      {/* Toast notifications */}
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss draggable pauseOnHover />
       {/* Toggle & Logo */}
       <div className="d-flex align-items-center mb-4 px-2">
         <button
